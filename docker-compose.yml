@@ -1,0 +1,79 @@
+version: '3.8'
+
+networks:
+  app_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: ${NETWORK_PREFIX}.0/24
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: restaurant_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      app_network:
+        ipv4_address: ${NETWORK_PREFIX}.10
+    env_file:
+      - .env
+
+  backend:
+    image: node:22-alpine
+    container_name: restaurant_backend
+    restart: unless-stopped
+    working_dir: /app
+    command: sh -c "npm install && npm run start:prod"
+    expose:
+      - "3000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+    networks:
+      app_network:
+        ipv4_address: ${NETWORK_PREFIX}.11
+    env_file:
+      - .env
+
+  frontend:
+    image: node:22-alpine
+    container_name: restaurant_frontend
+    restart: unless-stopped
+    working_dir: /app
+    command: sh -c "npm install && npm run build"
+    expose:
+      - "3000"
+    volumes:
+      - ./frontend:/app
+    networks:
+      app_network:
+        ipv4_address: ${NETWORK_PREFIX}.12
+    env_file:
+      - .env
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: restaurant_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./frontend/dist:/usr/share/nginx/html
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      app_network:
+        ipv4_address: ${NETWORK_PREFIX}.13
+
+volumes:
+  postgres_data:

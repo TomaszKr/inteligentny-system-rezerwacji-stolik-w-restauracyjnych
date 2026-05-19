@@ -19,4 +19,7 @@ export class User {
 
   @Column({ length: 20 })
   phone: string;
+
+  @Column({ length: 50, default: 'user' })
+  role: string;
 }

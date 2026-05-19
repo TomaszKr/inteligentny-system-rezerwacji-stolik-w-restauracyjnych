@@ -1,4 +1,4 @@
-version: '3.8'
+#version: '3.8'
 
 networks:
   app_network:
@@ -9,7 +9,7 @@ networks:
 
 services:
   db:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     container_name: restaurant_db
     restart: unless-stopped
     environment:
@@ -25,7 +25,7 @@ services:
       - .env
 
   backend:
-    image: node:22-alpine
+    image: node:26-alpine
     container_name: restaurant_backend
     restart: unless-stopped
     working_dir: /app
@@ -43,7 +43,7 @@ services:
       - .env
 
   frontend:
-    image: node:22-alpine
+    image: node:26-alpine
     container_name: restaurant_frontend
     restart: unless-stopped
     working_dir: /app
@@ -62,7 +62,7 @@ services:
     image: nginx:1.27-alpine
     container_name: restaurant_nginx
     restart: unless-stopped
-    ports:
+    expose:
       - "80:80"
       - "443:443"
     volumes:

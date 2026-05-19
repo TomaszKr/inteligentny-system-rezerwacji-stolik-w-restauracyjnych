@@ -5,7 +5,7 @@ import { Request, Response, NextFunction } from 'express';
 export class AdminMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     // Check if user has admin role
-    if (req.user && req.user.role === 'admin') {
+    if (req.user && (req.user as any).role === 'admin') {
       next();
     } else {
       return res.status(403).json({ 

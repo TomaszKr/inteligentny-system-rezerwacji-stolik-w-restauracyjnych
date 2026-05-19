@@ -63,4 +63,14 @@ export class ReservationService {
   async findOne(id: number): Promise<Reservation | undefined> {
     return this.reservationRepository.findOneBy({ id });
   }
+
+  async update(id: number, updateData: Partial<Reservation>): Promise<Reservation> {
+    const reservation = await this.findOne(id);
+    if (!reservation) {
+      throw new Error('Reservation not found');
+    }
+    
+    Object.assign(reservation, updateData);
+    return this.reservationRepository.save(reservation);
+  }
 }

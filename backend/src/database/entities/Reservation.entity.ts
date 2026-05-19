@@ -13,6 +13,9 @@ export class Reservation {
   @Column({ type: 'integer' })
   guests: number;
 
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  status: string;
+
   @ManyToOne(() => User, user => user.id)
   @JoinColumn({ name: 'userId' })
   user: User;

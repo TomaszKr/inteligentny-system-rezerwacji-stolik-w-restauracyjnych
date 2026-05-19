@@ -5,9 +5,7 @@ const ReservationsAdminPanelDemo = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Try to get token from localStorage or cookies
   const getToken = () => {
-    // In a real app, you would retrieve this from auth service
     return localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
   };
 
@@ -18,7 +16,7 @@ const ReservationsAdminPanelDemo = () => {
         const headers: HeadersInit = {
           'Content-Type': 'application/json',
         };
-        
+
         if (token) {
           headers['Authorization'] = `Bearer ${token}`;
         }
@@ -29,7 +27,6 @@ const ReservationsAdminPanelDemo = () => {
         });
 
         if (!response.ok) {
-          // Handle different error statuses
           if (response.status === 401) {
             setError('Authentication required. Please log in.');
           } else if (response.status === 403) {
@@ -50,7 +47,6 @@ const ReservationsAdminPanelDemo = () => {
       }
     };
 
-    // Only try to fetch if we're in a browser environment
     if (typeof window !== 'undefined') {
       fetchReservations();
     }

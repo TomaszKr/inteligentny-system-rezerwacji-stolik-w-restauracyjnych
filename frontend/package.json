@@ -1,0 +1,23 @@
+{
+  "name": "restaurant-frontend",
+  "version": "1.0.0",
+  "description": "Restaurant reservation system - React frontend",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "socket.io-client": "^4.7.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.4.5",
+    "vite": "^6.0.0"
+  }
+}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import TableMap from './TableMap';
 import './TableMapDemo.css';
 
@@ -8,70 +8,70 @@ const mockTables = [
     id: 1,
     number: 1,
     capacity: 4,
-    status: 'available',
+    status: 'available' as const,
     position: { x: 50, y: 50 }
   },
   {
     id: 2,
     number: 2,
     capacity: 2,
-    status: 'occupied',
+    status: 'occupied' as const,
     position: { x: 150, y: 50 }
   },
   {
     id: 3,
     number: 3,
     capacity: 6,
-    status: 'reserved',
+    status: 'reserved' as const,
     position: { x: 250, y: 50 }
   },
   {
     id: 4,
     number: 4,
     capacity: 4,
-    status: 'available',
+    status: 'available' as const,
     position: { x: 50, y: 150 }
   },
   {
     id: 5,
     number: 5,
     capacity: 8,
-    status: 'available',
+    status: 'available' as const,
     position: { x: 150, y: 150 }
   },
   {
     id: 6,
     number: 6,
     capacity: 2,
-    status: 'occupied',
+    status: 'occupied' as const,
     position: { x: 250, y: 150 }
   },
   {
     id: 7,
     number: 7,
     capacity: 4,
-    status: 'available',
+    status: 'available' as const,
     position: { x: 50, y: 250 }
   },
   {
     id: 8,
     number: 8,
     capacity: 6,
-    status: 'reserved',
+    status: 'reserved' as const,
     position: { x: 150, y: 250 }
   },
   {
     id: 9,
     number: 9,
     capacity: 4,
-    status: 'available',
+    status: 'available' as const,
     position: { x: 250, y: 250 }
   },
   {
     id: 10,
     number: 10,
     capacity: 2,
-    status: 'available',
+    status: 'available' as const,
     position: { x: 350, y: 50 }
   },
 ];

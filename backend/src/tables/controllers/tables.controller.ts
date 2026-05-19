@@ -2,7 +2,7 @@ import { Controller, Get, Query, UseGuards } from '@nestjs/common';
 import { TablesAvailabilityService } from '../services/tables-availability.service';
 import { CheckAvailabilityDto } from '../dto/check-availability.dto';
 import { TableAvailabilityDto } from '../dto/table-availability.dto';
-import { JwtAuthGuard } from '../../../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
 
 @Controller('tables')

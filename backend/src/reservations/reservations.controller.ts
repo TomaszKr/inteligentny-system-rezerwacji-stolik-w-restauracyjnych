@@ -1,9 +1,7 @@
-import { Controller, Post, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, HttpCode, HttpStatus, Req } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ReservationService } from './reservation.service';
 import { CreateReservationDto } from '../dto/create-reservation.dto';
-import { Request } from 'express';
-import { User } from '../database/entities/User.entity';
 
 @Controller('reservations')
 @UseGuards(JwtAuthGuard)
@@ -14,14 +12,13 @@ export class ReservationsController {
   @HttpCode(HttpStatus.CREATED)
   async create(
     @Body() createReservationDto: CreateReservationDto,
-    @Request() req,
+    @Req() req: any,
   ) {
-    // Inject the authenticated user's ID into the reservation data
     const reservationData = {
       ...createReservationDto,
-      userId: req.user.id, // Get user ID from JWT token
+      user: { id: req.user.id },
     };
 
-    return this.reservationService.create(reservationData);
+    return this.reservationService.create(reservationData as any);
   }
 }

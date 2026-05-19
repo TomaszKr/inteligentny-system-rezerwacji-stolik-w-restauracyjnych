@@ -1,0 +1,158 @@
+.table-map-container {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  position: relative;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: #f9fafb;
+  padding: 20px;
+}
+
+.table-map {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  background-color: #f3f4f6;
+  border-radius: 6px;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.table-item {
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+  border: 2px solid white;
+  color: white;
+  font-weight: bold;
+  user-select: none;
+}
+
+.table-item:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.table-item.available:hover {
+  box-shadow: 0 4px 8px rgba(74, 222, 128, 0.3);
+}
+
+.table-item.selected {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 3px #3b82f6;
+}
+
+.table-number {
+  font-size: 18px;
+  margin-bottom: 4px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.table-capacity {
+  font-size: 10px;
+  opacity: 0.9;
+  margin-bottom: 2px;
+}
+
+.table-status {
+  font-size: 8px;
+  opacity: 0.8;
+}
+
+/* Mobile-first responsive design */
+@media (max-width: 768px) {
+  .table-map-container {
+    padding: 10px;
+  }
+  
+  .table-item {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .table-number {
+    font-size: 16px;
+  }
+  
+  .table-capacity {
+    font-size: 9px;
+  }
+  
+  .table-status {
+    font-size: 7px;
+  }
+}
+
+@media (max-width: 480px) {
+  .table-map-container {
+    padding: 5px;
+  }
+  
+  .table-item {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .table-number {
+    font-size: 14px;
+  }
+  
+  .table-capacity {
+    font-size: 8px;
+  }
+  
+  .table-status {
+    font-size: 6px;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .table-item {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .table-number {
+    font-size: 20px;
+  }
+}
+
+/* Desktop large screens */
+@media (min-width: 1200px) {
+  .table-map-container {
+    padding: 30px;
+  }
+  
+  .table-item {
+    width: 90px;
+    height: 90px;
+  }
+  
+  .table-number {
+    font-size: 22px;
+  }
+}
+
+/* Status-specific styling */
+.table-item.available {
+  background-color: #4ade80;
+}
+
+.table-item.occupied {
+  background-color: #f87171;
+}
+
+.table-item.reserved {
+  background-color: #fbbf24;
+}

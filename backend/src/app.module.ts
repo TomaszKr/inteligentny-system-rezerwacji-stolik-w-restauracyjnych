@@ -5,6 +5,7 @@ import { Reservation } from './database/entities/Reservation.entity';
 import { Table } from './database/entities/Table.entity';
 import { Restaurant } from './database/entities/Restaurant.entity';
 import { AuthModule } from './auth/auth.module';
+import { ReservationsModule } from './reservations/reservations.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AuthModule } from './auth/auth.module';
       synchronize: true,
     }),
     AuthModule,
+    ReservationsModule,
   ],
   controllers: [],
   providers: [],

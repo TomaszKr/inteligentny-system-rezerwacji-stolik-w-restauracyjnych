@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { ReservationService } from './reservation.service';
 import { CreateReservationDto } from '../dto/create-reservation.dto';
@@ -11,6 +11,7 @@ export class ReservationsController {
   constructor(private readonly reservationService: ReservationService) {}
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   async create(
     @Body() createReservationDto: CreateReservationDto,
     @Request() req,

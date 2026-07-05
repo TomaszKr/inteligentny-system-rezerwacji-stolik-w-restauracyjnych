@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { Reservation } from '../database/entities/Reservation.entity';
 import { User } from '../database/entities/User.entity';
 import { UsersModule } from '../users/users.module';
+import { MailModule } from '../mail/mail.module';
 import { ReservationService } from './reservation.service';
 import { ReservationGateway } from './reservation.gateway';
 import { ReservationsController } from './reservations.controller';
@@ -13,6 +14,7 @@ import { AdminReservationsController } from './admin-reservations.controller';
   imports: [
     TypeOrmModule.forFeature([Reservation, User]),
     UsersModule,
+    MailModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'secretKey',
       signOptions: { expiresIn: '1h' },

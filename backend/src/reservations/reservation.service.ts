@@ -5,6 +5,7 @@ import { Reservation } from '../database/entities/Reservation.entity';
 import { User } from '../database/entities/User.entity';
 import { ReservationGateway } from './reservation.gateway';
 import { UsersService } from '../users/users.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class ReservationService {
@@ -15,6 +16,7 @@ export class ReservationService {
     private reservationRepository: Repository<Reservation>,
     private readonly reservationGateway: ReservationGateway,
     private readonly usersService: UsersService,
+    private readonly mailService: MailService,
     private dataSource: DataSource,
   ) {}
 
@@ -43,9 +45,24 @@ export class ReservationService {
       
       // Emit notification to all connected managers
       this.reservationGateway.handleNewReservation(savedReservation);
-      
+
       await queryRunner.commitTransaction();
-      
+
+      // Load full reservation with relations after commit
+      const fullReservation = await this.reservationRepository.findOne({
+        where: { id: savedReservation.id },
+        relations: ['user', 'table', 'table.restaurant'],
+      });
+
+      // Fire-and-forget: send confirmation email after transaction commit
+      if (fullReservation) {
+        this.mailService
+          .sendReservationConfirmation(fullReservation.id)
+          .catch((err) =>
+            this.logger.error('Failed to send confirmation email', err),
+          );
+      }
+
       return savedReservation;
     } catch (error) {
       await queryRunner.rollbackTransaction();

@@ -7,6 +7,7 @@ import { Restaurant } from './database/entities/Restaurant.entity';
 import { AuthModule } from './auth/auth.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { TablesModule } from './tables/tables.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { TablesModule } from './tables/tables.module';
     AuthModule,
     ReservationsModule,
     TablesModule,
+    MailModule,
   ],
   controllers: [],
   providers: [],

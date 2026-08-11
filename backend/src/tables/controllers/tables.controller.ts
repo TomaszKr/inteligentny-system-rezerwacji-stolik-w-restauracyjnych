@@ -3,7 +3,6 @@ import { TablesAvailabilityService } from '../services/tables-availability.servi
 import { CheckAvailabilityDto } from '../dto/check-availability.dto';
 import { TableAvailabilityDto } from '../dto/table-availability.dto';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
-import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
 
 @Controller('tables')
 export class TablesController {
@@ -12,8 +11,7 @@ export class TablesController {
   @Get('availability')
   @UseGuards(JwtAuthGuard)
   async checkAvailability(
-    @Query(new ValidationPipe({ transform: true }))
-    dto: CheckAvailabilityDto
+    @Query() dto: CheckAvailabilityDto
   ): Promise<TableAvailabilityDto[]> {
     return this.tablesAvailabilityService.checkAvailability(dto);
   }

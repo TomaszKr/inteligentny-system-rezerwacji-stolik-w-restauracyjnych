@@ -1,6 +1,7 @@
-import { Controller, Get, Patch, Param, Body } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, ParseIntPipe } from '@nestjs/common';
 import { ReservationService } from './reservation.service';
 import { Reservation } from '../database/entities/Reservation.entity';
+import { UpdateReservationStatusDto } from './dto/update-reservation-status.dto';
 
 @Controller('admin/reservations')
 export class AdminReservationsController {
@@ -13,9 +14,9 @@ export class AdminReservationsController {
 
   @Patch(':id/status')
   async updateStatus(
-    @Param('id') id: number,
-    @Body('status') status: string,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateReservationStatusDto,
   ): Promise<Reservation> {
-    return this.reservationService.update(id, { status } as any);
+    return this.reservationService.update(id, { status: dto.status });
   }
 }

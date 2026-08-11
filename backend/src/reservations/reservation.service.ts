@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource, QueryRunner } from 'typeorm';
 import { Reservation } from '../database/entities/Reservation.entity';
@@ -21,6 +21,11 @@ export class ReservationService {
   ) {}
 
   async create(reservationData: Partial<Reservation>): Promise<Reservation> {
+    // Walidacja daty - nie można rezerwować w przeszłości
+    if (reservationData.reservationTime && reservationData.reservationTime < new Date()) {
+      throw new BadRequestException('Reservation time cannot be in the past');
+    }
+
     // Wykorzystanie transakcji z poziomem izolacji SERIALIZABLE
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();

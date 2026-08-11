@@ -1,7 +1,7 @@
-import { IsString, IsOptional, IsInt, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsInt, IsNotEmpty, IsEmail } from 'class-validator';
 
 export class MailOptionsDto {
-  @IsString()
+  @IsEmail()
   @IsNotEmpty()
   to: string;
 

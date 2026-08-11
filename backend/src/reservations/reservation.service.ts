@@ -1,11 +1,24 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, QueryRunner } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { Reservation } from '../database/entities/Reservation.entity';
-import { User } from '../database/entities/User.entity';
+import { Table } from '../database/entities/Table.entity';
 import { ReservationGateway } from './reservation.gateway';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
+
+export interface CreateReservationInput {
+  reservationTime: Date;
+  guests: number;
+  tableId: number;
+  user: { id: number };
+}
 
 @Injectable()
 export class ReservationService {
@@ -20,9 +33,9 @@ export class ReservationService {
     private dataSource: DataSource,
   ) {}
 
-  async create(reservationData: Partial<Reservation>): Promise<Reservation> {
+  async create(input: CreateReservationInput): Promise<Reservation> {
     // Walidacja daty - nie można rezerwować w przeszłości
-    if (reservationData.reservationTime && reservationData.reservationTime < new Date()) {
+    if (input.reservationTime && input.reservationTime < new Date()) {
       throw new BadRequestException('Reservation time cannot be in the past');
     }
 
@@ -32,20 +45,33 @@ export class ReservationService {
     await queryRunner.startTransaction('SERIALIZABLE');
 
     try {
+      // Sprawdzenie czy stolik istnieje
+      const table = await queryRunner.manager.findOne(Table, {
+        where: { id: input.tableId },
+      });
+      if (!table) {
+        throw new NotFoundException('Table not found');
+      }
+
       // Sprawdzenie czy stolik jest dostępny w danym czasie
       const existingReservation = await queryRunner.manager
         .createQueryBuilder(Reservation, 'reservation')
-        .where('reservation.table.id = :tableId', { tableId: reservationData.table?.id })
-        .andWhere('reservation.reservationTime = :reservationTime', { 
-          reservationTime: reservationData.reservationTime 
+        .where('reservation.tableId = :tableId', { tableId: input.tableId })
+        .andWhere('reservation.reservationTime = :reservationTime', {
+          reservationTime: input.reservationTime,
         })
         .getOne();
 
       if (existingReservation) {
-        throw new Error('Table is already reserved for this time slot');
+        throw new ConflictException('Table is already reserved for this time slot');
       }
 
-      const reservation = this.reservationRepository.create(reservationData);
+      const reservation = this.reservationRepository.create({
+        reservationTime: input.reservationTime,
+        guests: input.guests,
+        user: input.user,
+        table,
+      });
       const savedReservation = await queryRunner.manager.save(reservation);
       
       // Emit notification to all connected managers

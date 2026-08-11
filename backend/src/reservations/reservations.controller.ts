@@ -14,11 +14,11 @@ export class ReservationsController {
     @Body() createReservationDto: CreateReservationDto,
     @Req() req: any,
   ) {
-    const reservationData = {
-      ...createReservationDto,
+    return this.reservationService.create({
+      reservationTime: createReservationDto.reservationTime,
+      guests: createReservationDto.guests,
+      tableId: createReservationDto.tableId,
       user: { id: req.user.id },
-    };
-
-    return this.reservationService.create(reservationData as any);
+    });
   }
 }

@@ -11,10 +11,12 @@ describe('AuthService', () => {
 
   const mockUser = {
     id: 1,
+    firstName: 'Test',
+    lastName: 'User',
     email: 'test@example.com',
     password: '$2b$10$hashedPassword',
-    name: 'Test User',
-    role: 'user'
+    phone: '123456789',
+    role: 'user',
   };
 
   beforeEach(async () => {
@@ -49,15 +51,17 @@ describe('AuthService', () => {
   describe('validateUser', () => {
     it('should return user if credentials are valid', async () => {
       jest.spyOn(usersService, 'findByEmail').mockResolvedValue(mockUser);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
+      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
 
       const result = await authService.validateUser('test@example.com', 'password');
-      
+
       expect(result).toEqual({
         id: 1,
+        firstName: 'Test',
+        lastName: 'User',
         email: 'test@example.com',
-        name: 'Test User',
-        role: 'user'
+        phone: '123456789',
+        role: 'user',
       });
     });
 
@@ -84,7 +88,7 @@ describe('AuthService', () => {
 
   describe('register', () => {
     it('should create a new user with hashed password', async () => {
-      jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashedPassword');
+      jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashedPassword' as never);
       jest.spyOn(usersService, 'create').mockResolvedValue(mockUser);
 
       const result = await authService.register('test@example.com', 'password', 'Test User');

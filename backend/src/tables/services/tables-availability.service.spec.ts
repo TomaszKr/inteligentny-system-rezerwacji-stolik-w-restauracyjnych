@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TablesAvailabilityService } from './tables-availability.service';
-import { getRepositoryToken, DataSource } from '@nestjs/typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
 import { Table } from '../../database/entities/Table.entity';
 import { Reservation } from '../../database/entities/Reservation.entity';
-import { QueryRunner } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 
 describe('TablesAvailabilityService', () => {
   let service: TablesAvailabilityService;

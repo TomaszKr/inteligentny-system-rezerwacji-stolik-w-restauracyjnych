@@ -1,7 +1,8 @@
 import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { Table } from './Table.entity';
 
-@Entity()
+// Jawna nazwa tabeli — zgodna z migracjami (#92).
+@Entity('restaurants')
 export class Restaurant {
   @PrimaryGeneratedColumn()
   id: number;

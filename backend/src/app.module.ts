@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { join } from 'path';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -24,8 +25,12 @@ import { RemindersModule } from './reminders/reminders.module';
       database: process.env.DB_NAME || 'appdb',
       entities: [User, Reservation, Table, Restaurant],
       // Auto-sync schematu. Domyślnie włączone (demo/dev, docker compose polega na tym).
-      // W PRODUKCJI ustaw DB_SYNCHRONIZE=false i uruchamiaj migracje (#66).
+      // W PRODUKCJI ustaw DB_SYNCHRONIZE=false i uruchamiaj migracje (#66/#92).
       synchronize: (process.env.DB_SYNCHRONIZE ?? 'true') !== 'false',
+      // Migracje: glob działa dla źródeł (dev/ts-node) i skompilowanego dist.
+      migrations: [join(__dirname, 'database', 'migrations', '*.{ts,js}')],
+      // Gdy synchronize wyłączone (prod), zbuduj/aktualizuj schema migracjami przy starcie.
+      migrationsRun: (process.env.DB_SYNCHRONIZE ?? 'true') === 'false',
     }),
     // Rate limiting — domyślny (prywatny) limit dla endpointów uwierzytelnionych.
     // Publiczne endpointy (auth) mają ostrzejszy limit przez @Throttle w kontrolerze.

@@ -4,7 +4,21 @@ import { Repository } from 'typeorm';
 import { User } from '../database/entities/User.entity';
 import { UserRole } from './enums/user-role.enum';
 
-export type SafeUser = Omit<User, 'password'>;
+export type SafeUser = Omit<
+  User,
+  'password' | 'twoFactorSecret' | 'verificationToken'
+>;
+
+/** Usuwa wrażliwe pola z encji User przed zwróceniem w API. */
+export function toSafeUser(user: User): SafeUser {
+  const {
+    password: _pw,
+    twoFactorSecret: _2fa,
+    verificationToken: _vt,
+    ...safe
+  } = user;
+  return safe;
+}
 
 @Injectable()
 export class UsersService {
@@ -73,10 +87,10 @@ export class UsersService {
     });
   }
 
-  /** Lista użytkowników bez pola password (dla panelu admina). */
+  /** Lista użytkowników bez wrażliwych pól (dla panelu admina). */
   async findAll(): Promise<SafeUser[]> {
     const users = await this.usersRepository.find();
-    return users.map(({ password: _pw, ...rest }) => rest);
+    return users.map(toSafeUser);
   }
 
   /** Zmiana roli użytkownika (admin nadaje role pracownikom). */
@@ -114,7 +128,19 @@ export class UsersService {
     this.logger.warn(
       `Zmiana roli: użytkownik #${id} → '${role}' (przez #${actingUserId ?? 'system'})`,
     );
-    const { password: _pw, ...rest } = saved;
-    return rest;
+    return toSafeUser(saved);
+  }
+
+  /** Zapis sekretu 2FA (jeszcze nieaktywnego) (#88). */
+  async setTwoFactorSecret(id: number, secret: string): Promise<void> {
+    await this.usersRepository.update(id, { twoFactorSecret: secret });
+  }
+
+  /** Włącz/wyłącz 2FA; przy wyłączeniu czyści sekret (#88). */
+  async setTwoFactorEnabled(id: number, enabled: boolean): Promise<void> {
+    await this.usersRepository.update(id, {
+      twoFactorEnabled: enabled,
+      ...(enabled ? {} : { twoFactorSecret: null }),
+    });
   }
 }

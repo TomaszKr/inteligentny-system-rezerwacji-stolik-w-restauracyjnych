@@ -6,7 +6,8 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { UsersService } from '../users/users.service';
+import { authenticator } from 'otplib';
+import { UsersService, toSafeUser } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { MailService } from '../mail/mail.service';
 import * as bcrypt from 'bcryptjs';
@@ -59,7 +60,17 @@ export class AuthService {
     return null;
   }
 
-  async login(user: User) {
+  async login(user: User, twoFactorCode?: string) {
+    // 2FA (#88) — gdy włączone, wymagaj poprawnego kodu TOTP
+    if (user.twoFactorEnabled) {
+      if (
+        !twoFactorCode ||
+        !authenticator.verify({ token: twoFactorCode, secret: user.twoFactorSecret ?? '' })
+      ) {
+        this.logger.warn(`Logowanie bez/nieprawidłowy kod 2FA: ${user.email}`);
+        throw new UnauthorizedException('Wymagany prawidłowy kod 2FA');
+      }
+    }
     const payload = {
       email: user.email,
       sub: user.id,
@@ -69,6 +80,42 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  /** Rozpoczyna konfigurację 2FA — generuje sekret i zwraca otpauth URL (#88). */
+  async setupTwoFactor(userId: number, email: string): Promise<{ secret: string; otpauthUrl: string }> {
+    const secret = authenticator.generateSecret();
+    await this.usersService.setTwoFactorSecret(userId, secret);
+    const otpauthUrl = authenticator.keyuri(email, 'RestaurantApp', secret);
+    return { secret, otpauthUrl };
+  }
+
+  /** Włącza 2FA po weryfikacji kodu z aplikacji uwierzytelniającej (#88). */
+  async enableTwoFactor(userId: number, code: string): Promise<{ enabled: true }> {
+    const user = await this.usersService.findOne(userId);
+    if (!user || !user.twoFactorSecret) {
+      throw new BadRequestException('Najpierw wykonaj konfigurację 2FA (setup)');
+    }
+    if (!authenticator.verify({ token: code, secret: user.twoFactorSecret })) {
+      throw new UnauthorizedException('Nieprawidłowy kod 2FA');
+    }
+    await this.usersService.setTwoFactorEnabled(userId, true);
+    this.logger.log(`Włączono 2FA: ${user.email}`);
+    return { enabled: true };
+  }
+
+  /** Wyłącza 2FA po weryfikacji kodu (#88). */
+  async disableTwoFactor(userId: number, code: string): Promise<{ enabled: false }> {
+    const user = await this.usersService.findOne(userId);
+    if (!user || !user.twoFactorEnabled) {
+      return { enabled: false };
+    }
+    if (!authenticator.verify({ token: code, secret: user.twoFactorSecret ?? '' })) {
+      throw new UnauthorizedException('Nieprawidłowy kod 2FA');
+    }
+    await this.usersService.setTwoFactorEnabled(userId, false);
+    this.logger.log(`Wyłączono 2FA: ${user.email}`);
+    return { enabled: false };
   }
 
   /**
@@ -113,13 +160,13 @@ export class AuthService {
       .catch((err) => this.logger.error('Nie udało się wysłać e-maila weryfikacyjnego', err));
     this.logger.log(`Link weryfikacyjny (${email}): /api/auth/verify-email?token=${verificationToken}`);
 
-    // Nie zwracaj hasła ani (domyślnie) tokenu
-    const { password: _pw, verificationToken: _vt, ...result } = user;
-    // Demo bez skrzynki: opcjonalnie zwróć token, by umożliwić weryfikację
+    // Nie zwracaj wrażliwych pól (hasło, sekret 2FA, token) — spójnie przez toSafeUser
+    const safe = toSafeUser(user);
+    // Demo bez skrzynki: opcjonalnie zwróć token weryfikacyjny, by umożliwić weryfikację
     if ((process.env.EMAIL_VERIFICATION_EXPOSE_TOKEN ?? 'true') === 'true') {
-      return { ...result, verificationToken };
+      return { ...safe, verificationToken };
     }
-    return result;
+    return safe;
   }
 
   /** Weryfikacja adresu e-mail po tokenie (#81). */

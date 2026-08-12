@@ -128,10 +128,12 @@ export class ReservationService {
       options.where = { reservationTime: Between(start, end) };
     }
     const reservations = await this.reservationRepository.find(options);
-    // Nie wystawiaj hasła zagnieżdżonego usera
+    // Nie wystawiaj wrażliwych pól zagnieżdżonego usera
     reservations.forEach((r) => {
       if (r.user) {
         delete (r.user as any).password;
+        delete (r.user as any).twoFactorSecret;
+        delete (r.user as any).verificationToken;
       }
     });
     return reservations;

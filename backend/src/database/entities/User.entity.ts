@@ -40,4 +40,11 @@ export class User {
 
   @Column({ type: 'varchar', length: 128, nullable: true })
   verificationToken: string | null;
+
+  // 2FA / TOTP (#88, OWASP A07)
+  @Column({ type: 'varchar', length: 128, nullable: true })
+  twoFactorSecret: string | null;
+
+  @Column({ type: 'boolean', default: false })
+  twoFactorEnabled: boolean;
 }

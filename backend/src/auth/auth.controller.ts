@@ -6,6 +6,7 @@ import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { TwoFactorCodeDto } from './dto/two-factor-code.dto';
 
 @ApiTags('auth')
 // Endpointy publiczne (bez JWT) — ostrzejszy limit z env (anti brute-force / spam)
@@ -28,10 +29,10 @@ export class AuthController {
     description: 'Zalogowano pomyślnie — zwraca token JWT',
     schema: { example: { access_token: 'eyJhbGci...' } },
   })
-  @ApiResponse({ status: 401, description: 'Nieprawidłowy email lub hasło' })
+  @ApiResponse({ status: 401, description: 'Nieprawidłowy email/hasło lub brak/nieprawidłowy kod 2FA' })
   @ApiResponse({ status: 400, description: 'Brak wymaganego pola (email/password)' })
-  async login(@Req() req: any) {
-    return this.authService.login(req.user);
+  async login(@Req() req: any, @Body() body: LoginDto & { code?: string }) {
+    return this.authService.login(req.user, body?.code);
   }
 
   @Post('register')
@@ -80,5 +81,38 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Brak lub nieważny token JWT' })
   async logout(@Req() req: any) {
     return this.authService.logout(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/setup')
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '2FA — generuj sekret (zwraca otpauth URL do QR)' })
+  @ApiResponse({ status: 201, description: 'Sekret 2FA wygenerowany' })
+  @ApiResponse({ status: 401, description: 'Brak lub nieważny token JWT' })
+  async twoFactorSetup(@Req() req: any) {
+    return this.authService.setupTwoFactor(req.user.id, req.user.email);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/enable')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '2FA — włącz po weryfikacji kodu TOTP' })
+  @ApiResponse({ status: 200, description: '2FA włączone' })
+  @ApiResponse({ status: 400, description: 'Brak konfiguracji 2FA' })
+  @ApiResponse({ status: 401, description: 'Nieprawidłowy kod lub token' })
+  async twoFactorEnable(@Req() req: any, @Body() dto: TwoFactorCodeDto) {
+    return this.authService.enableTwoFactor(req.user.id, dto.code);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/disable')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: '2FA — wyłącz po weryfikacji kodu TOTP' })
+  @ApiResponse({ status: 200, description: '2FA wyłączone' })
+  @ApiResponse({ status: 401, description: 'Nieprawidłowy kod lub token' })
+  async twoFactorDisable(@Req() req: any, @Body() dto: TwoFactorCodeDto) {
+    return this.authService.disableTwoFactor(req.user.id, dto.code);
   }
 }

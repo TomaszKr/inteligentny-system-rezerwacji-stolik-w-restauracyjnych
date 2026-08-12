@@ -1,6 +1,7 @@
 import TableMap from './components/table-map/TableMap';
 import ReservationsAdminPanelDemo from './components/admin/ReservationsAdminPanelDemo';
 import DayCalendar from './components/admin/DayCalendar';
+import ManagerNotifications from './components/admin/ManagerNotifications';
 import AvailabilitySearch from './components/availability/AvailabilitySearch';
 import AuthPanel from './components/auth/AuthPanel';
 
@@ -45,6 +46,8 @@ const App = () => {
         tables={tables} 
         onTableSelect={handleTableSelect}
       />
+      {/* #22 — powiadomienia real-time o nowych rezerwacjach (manager/admin) */}
+      <ManagerNotifications />
       {/* #17 — kalendarz rezerwacji na wybrany dzień (admin) */}
       <DayCalendar />
       {/* Admin panel for managing reservations */}

@@ -31,19 +31,21 @@ export class ReservationGateway implements OnGatewayConnection, OnGatewayDisconn
 
       const token = authHeader.substring(7); // Remove "Bearer " prefix
       const decoded = this.jwtService.verify(token);
-      
-      // Verify that the user is a manager
-      const user = await this.usersService.findOne(decoded.id);
-      
-      if (!user || user.role !== 'manager') {
-        this.logger.warn(`Non-manager connection attempt - user ID: ${decoded.id}`);
+      // Payload JWT: { email, sub: userId, role } — id jest w `sub`
+      const userId = decoded.sub ?? decoded.id;
+
+      // Verify that the user is a manager (lub admin)
+      const user = await this.usersService.findOne(userId);
+
+      if (!user || (user.role !== 'manager' && user.role !== 'admin')) {
+        this.logger.warn(`Non-manager connection attempt - user ID: ${userId}`);
         client.disconnect();
         return;
       }
 
       // Store connected manager
-      this.connectedManagers.set(client.id, decoded.id);
-      this.logger.log(`Manager connected: ${decoded.id} (client: ${client.id})`);
+      this.connectedManagers.set(client.id, userId);
+      this.logger.log(`Manager connected: ${userId} (client: ${client.id})`);
       
     } catch (error) {
       this.logger.error(`Connection error: ${error.message}`);

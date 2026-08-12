@@ -13,6 +13,31 @@ export const getToken = (): string | null => localStorage.getItem(TOKEN_KEY);
 
 export const isAuthenticated = (): boolean => !!getToken();
 
+export interface CurrentUser {
+  email: string;
+  role: string;
+  sub: number;
+}
+
+/** Dekoduje payload JWT (bez weryfikacji podpisu — tylko do UI/gatingu). */
+export const getUser = (): CurrentUser | null => {
+  const token = getToken();
+  if (!token) return null;
+  try {
+    const payload = token.split('.')[1];
+    const json = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+    const data = JSON.parse(decodeURIComponent(escape(json)));
+    return { email: data.email, role: data.role, sub: data.sub };
+  } catch {
+    return null;
+  }
+};
+
+export const isAdmin = (): boolean => {
+  const u = getUser();
+  return u?.role === 'admin' || u?.role === 'manager';
+};
+
 export const logout = (): void => {
   localStorage.removeItem(TOKEN_KEY);
 };
@@ -23,16 +48,20 @@ export const authHeaders = (): Record<string, string> => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-export const login = async (email: string, password: string): Promise<void> => {
+export const login = async (
+  email: string,
+  password: string,
+  code?: string,
+): Promise<void> => {
   const response = await fetch(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, ...(code ? { code } : {}) }),
   });
   if (!response.ok) {
     throw new Error(
       response.status === 401
-        ? 'Nieprawidłowy email lub hasło'
+        ? 'Nieprawidłowy email, hasło lub kod 2FA'
         : `Błąd logowania (HTTP ${response.status})`,
     );
   }

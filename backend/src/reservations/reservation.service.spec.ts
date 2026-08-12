@@ -9,7 +9,7 @@ jest.mock(
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { Reservation } from '../database/entities/Reservation.entity';
 import { ReservationService, CreateReservationInput } from './reservation.service';
 import { ReservationGateway } from './reservation.gateway';
@@ -222,6 +222,33 @@ describe('ReservationService', () => {
         expect.objectContaining({ id: 1, status: 'Zrealizowana' }),
       );
       expect(result).toEqual(expect.objectContaining({ status: 'Zrealizowana' }));
+    });
+  });
+
+  describe('cancel (#15)', () => {
+    it('właściciel odwołuje rezerwację → status Anulowana', async () => {
+      mockRepo.findOne.mockResolvedValueOnce({ id: 7, status: 'W toku', user: { id: 42 } });
+
+      const result = await service.cancel(7, 42);
+
+      expect(mockRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 7, status: 'Anulowana' }),
+      );
+      expect(result).toEqual(expect.objectContaining({ status: 'Anulowana' }));
+    });
+
+    it('nie-właściciel → ForbiddenException, brak zapisu', async () => {
+      mockRepo.findOne.mockResolvedValueOnce({ id: 7, status: 'W toku', user: { id: 42 } });
+
+      await expect(service.cancel(7, 99)).rejects.toThrow(ForbiddenException);
+      expect(mockRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('nieistniejąca rezerwacja → NotFoundException', async () => {
+      mockRepo.findOne.mockResolvedValueOnce(null);
+
+      await expect(service.cancel(999, 42)).rejects.toThrow(NotFoundException);
+      expect(mockRepo.save).not.toHaveBeenCalled();
     });
   });
 });

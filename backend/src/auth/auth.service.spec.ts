@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConflictException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
@@ -104,6 +105,16 @@ describe('AuthService', () => {
       const result = await authService.register('test@example.com', 'password', 'Test', 'User', '+48123456789');
 
       expect(result).not.toHaveProperty('password');
+    });
+
+    it('rzuca ConflictException gdy email już istnieje (#68)', async () => {
+      jest.spyOn(usersService, 'findByEmail').mockResolvedValue(mockUser as any);
+      const createSpy = jest.spyOn(usersService, 'create');
+
+      await expect(
+        authService.register('test@example.com', 'password', 'Test', 'User', '+48123456789'),
+      ).rejects.toThrow(ConflictException);
+      expect(createSpy).not.toHaveBeenCalled();
     });
   });
 });

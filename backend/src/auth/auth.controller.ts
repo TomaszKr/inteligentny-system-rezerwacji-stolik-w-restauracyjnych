@@ -50,7 +50,7 @@ export class AuthController {
     },
   })
   @ApiResponse({ status: 400, description: 'Błąd walidacji danych wejściowych' })
-  @ApiResponse({ status: 500, description: 'Znany brak: duplikat email nie jest obsłużony' })
+  @ApiResponse({ status: 409, description: 'Użytkownik z tym adresem email już istnieje' })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(
       dto.email,

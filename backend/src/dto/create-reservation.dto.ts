@@ -1,4 +1,4 @@
-import { IsDate, IsNumber, IsNotEmpty, Min } from 'class-validator';
+import { IsDate, IsNumber, IsNotEmpty, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsFutureDate } from '../common/validators/is-future-date.validator';
@@ -16,10 +16,11 @@ export class CreateReservationDto {
   @IsFutureDate()
   reservationTime: Date;
 
-  @ApiProperty({ example: 4, minimum: 1 })
+  @ApiProperty({ example: 4, minimum: 1, maximum: 50 })
   @IsNumber()
   @IsNotEmpty()
   @Min(1)
+  @Max(50)
   guests: number;
 
   @ApiProperty({ example: 12, description: 'ID stolika' })

@@ -7,7 +7,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, Between } from 'typeorm';
 import { Reservation } from '../database/entities/Reservation.entity';
 import { Table } from '../database/entities/Table.entity';
 import { ReservationStatus } from './enums/reservation-status.enum';
@@ -106,8 +106,34 @@ export class ReservationService {
     }
   }
 
-  async findAll(): Promise<Reservation[]> {
-    return this.reservationRepository.find();
+  /**
+   * Lista rezerwacji dla panelu/kalendarza (#17). Opcjonalny filtr na jeden dzień
+   * (date = 'YYYY-MM-DD'). Ładuje relacje user/table; usuwa hasło z usera.
+   */
+  async findAll(date?: string): Promise<Reservation[]> {
+    const options: any = {
+      relations: ['user', 'table'],
+      order: { reservationTime: 'ASC' },
+    };
+    if (date) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        throw new BadRequestException('date must be in YYYY-MM-DD format');
+      }
+      const start = new Date(`${date}T00:00:00.000Z`);
+      const end = new Date(`${date}T23:59:59.999Z`);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        throw new BadRequestException('Invalid date');
+      }
+      options.where = { reservationTime: Between(start, end) };
+    }
+    const reservations = await this.reservationRepository.find(options);
+    // Nie wystawiaj hasła zagnieżdżonego usera
+    reservations.forEach((r) => {
+      if (r.user) {
+        delete (r.user as any).password;
+      }
+    });
+    return reservations;
   }
 
   async findOne(id: number): Promise<Reservation | undefined> {

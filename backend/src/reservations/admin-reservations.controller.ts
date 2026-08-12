@@ -1,5 +1,5 @@
-import { Controller, Get, Patch, Param, Body, ParseIntPipe, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Patch, Param, Body, Query, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../auth/admin.guard';
 import { ReservationService } from './reservation.service';
@@ -14,12 +14,13 @@ export class AdminReservationsController {
   constructor(private readonly reservationService: ReservationService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Lista wszystkich rezerwacji (tylko admin)' })
-  @ApiResponse({ status: 200, description: 'Lista rezerwacji' })
+  @ApiOperation({ summary: 'Lista rezerwacji, opcjonalnie na dany dzień (tylko admin)' })
+  @ApiQuery({ name: 'date', required: false, example: '2026-12-24', description: 'Filtr: rezerwacje z danego dnia (YYYY-MM-DD)' })
+  @ApiResponse({ status: 200, description: 'Lista rezerwacji (z user/table, bez hasła)' })
   @ApiResponse({ status: 401, description: 'Brak lub nieważny token JWT' })
   @ApiResponse({ status: 403, description: 'Użytkownik nie jest administratorem' })
-  async findAll(): Promise<Reservation[]> {
-    return this.reservationService.findAll();
+  async findAll(@Query('date') date?: string): Promise<Reservation[]> {
+    return this.reservationService.findAll(date);
   }
 
   @Patch(':id/status')

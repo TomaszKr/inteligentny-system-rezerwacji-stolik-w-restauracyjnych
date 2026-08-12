@@ -7,9 +7,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 /**
  * Fetch all reservations from the backend
  */
-export const fetchReservations = async (): Promise<Reservation[]> => {
+export const fetchReservations = async (date?: string): Promise<Reservation[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/admin/reservations`, {
+    const query = date ? `?date=${encodeURIComponent(date)}` : '';
+    const response = await fetch(`${API_BASE_URL}/admin/reservations${query}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

@@ -9,7 +9,7 @@ jest.mock(
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { ConflictException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { ConflictException, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { Reservation } from '../database/entities/Reservation.entity';
 import { ReservationService, CreateReservationInput } from './reservation.service';
 import { ReservationGateway } from './reservation.gateway';
@@ -23,6 +23,7 @@ describe('ReservationService', () => {
     create: jest.fn((x) => x),
     findOne: jest.fn().mockResolvedValue({ id: 1 }),
     findOneBy: jest.fn(),
+    find: jest.fn(),
     save: jest.fn((x) => Promise.resolve(x)),
   };
 
@@ -222,6 +223,24 @@ describe('ReservationService', () => {
         expect.objectContaining({ id: 1, status: 'Zrealizowana' }),
       );
       expect(result).toEqual(expect.objectContaining({ status: 'Zrealizowana' }));
+    });
+  });
+
+  describe('findAll (#17)', () => {
+    it('usuwa password z zagnieżdżonego usera', async () => {
+      mockRepo.find.mockResolvedValueOnce([
+        { id: 1, guests: 2, user: { id: 5, email: 'a@a.pl', password: 'hash' }, table: { id: 3 } },
+      ]);
+
+      const result = await service.findAll();
+
+      expect((result[0].user as any).password).toBeUndefined();
+      expect(result[0].user.email).toBe('a@a.pl');
+    });
+
+    it('rzuca BadRequestException dla błędnego formatu date', async () => {
+      await expect(service.findAll('nie-data')).rejects.toThrow(BadRequestException);
+      expect(mockRepo.find).not.toHaveBeenCalled();
     });
   });
 

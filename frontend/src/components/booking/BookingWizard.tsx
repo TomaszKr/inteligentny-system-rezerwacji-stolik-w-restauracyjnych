@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { fetchAvailableTables, AvailableTable } from '../../services/availabilityService';
 import { createReservation } from '../../services/reservationService';
 import { useAuth } from '../../context/AuthContext';
@@ -15,6 +15,10 @@ const TIME_SLOTS = ['12:00', '13:00', '14:00', '18:00', '19:00', '20:00', '21:00
 const todayIso = () => new Date().toISOString().slice(0, 10);
 const fmtDate = (d: string) =>
   new Date(d + 'T00:00:00').toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' });
+
+/** Czy dany slot (data+godzina) jest już w przeszłości — blokada wsteczna. */
+const isSlotPast = (date: string, slot: string) =>
+  new Date(`${date}T${slot}:00`).getTime() <= Date.now();
 
 const BookingWizard: React.FC = () => {
   const { authed } = useAuth();
@@ -34,8 +38,22 @@ const BookingWizard: React.FC = () => {
 
   const isoTime = useMemo(() => new Date(`${date}T${time}:00`).toISOString(), [date, time]);
 
+  const allSlotsPast = useMemo(() => TIME_SLOTS.every((s) => isSlotPast(date, s)), [date]);
+
+  // Blokada wsteczna: jeśli wybrany slot już minął (dziś), przeskocz na najbliższy dostępny.
+  useEffect(() => {
+    if (isSlotPast(date, time)) {
+      const next = TIME_SLOTS.find((s) => !isSlotPast(date, s));
+      if (next && next !== time) setTime(next);
+    }
+  }, [date, time]);
+
   const search = async () => {
     setError(null);
+    if (isSlotPast(date, time)) {
+      setError('Wybrany termin już minął. Wybierz przyszłą datę lub godzinę.');
+      return;
+    }
     setLoading(true);
     setTables(null);
     setSelected(null);
@@ -128,10 +146,17 @@ const BookingWizard: React.FC = () => {
           <div className="field">
             <label className="label"><IcClock size={15} /> Godzina</label>
             <div className="time-grid">
-              {TIME_SLOTS.map((t) => (
-                <button key={t} type="button" className={`chip time-chip ${time === t ? 'is-active' : ''}`} onClick={() => setTime(t)}>{t}</button>
-              ))}
+              {TIME_SLOTS.map((t) => {
+                const past = isSlotPast(date, t);
+                return (
+                  <button key={t} type="button" disabled={past}
+                    className={`chip time-chip ${time === t ? 'is-active' : ''}`}
+                    title={past ? 'Termin już minął' : undefined}
+                    onClick={() => setTime(t)}>{t}</button>
+                );
+              })}
             </div>
+            {allSlotsPast && <p className="faint" style={{ fontSize: 13, marginTop: 8 }}>Wszystkie godziny na dziś już minęły — wybierz kolejny dzień.</p>}
           </div>
 
           {error && <div className="alert alert-danger" role="alert">{error}</div>}

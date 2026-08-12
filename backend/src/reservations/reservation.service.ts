@@ -75,11 +75,12 @@ export class ReservationService {
         table,
       });
       const savedReservation = await queryRunner.manager.save(reservation);
-      
-      // Emit notification to all connected managers
-      this.reservationGateway.handleNewReservation(savedReservation);
 
       await queryRunner.commitTransaction();
+
+      // Powiadom menedżerów DOPIERO po commicie — inaczej rollback wysłałby
+      // powiadomienie o nieistniejącej rezerwacji (#59)
+      this.reservationGateway.handleNewReservation(savedReservation);
 
       // Load full reservation with relations after commit
       const fullReservation = await this.reservationRepository.findOne({

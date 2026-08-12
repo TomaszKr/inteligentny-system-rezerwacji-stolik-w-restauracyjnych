@@ -14,8 +14,30 @@ describe('RegisterDto', () => {
       email: 'jan.kowalski@example.com',
       password: 'tajneHaslo123',
       firstName: 'Jan',
+      lastName: 'Kowalski',
+      phone: '+48123456789',
     });
     expect(errors).toHaveLength(0);
+  });
+
+  it('odrzuca brak wymaganego lastName', async () => {
+    const errors = await validateDto({
+      email: 'jan.kowalski@example.com',
+      password: 'tajneHaslo123',
+      firstName: 'Jan',
+      phone: '+48123456789',
+    });
+    expect(errors.some((e) => e.property === 'lastName')).toBe(true);
+  });
+
+  it('odrzuca brak wymaganego phone', async () => {
+    const errors = await validateDto({
+      email: 'jan.kowalski@example.com',
+      password: 'tajneHaslo123',
+      firstName: 'Jan',
+      lastName: 'Kowalski',
+    });
+    expect(errors.some((e) => e.property === 'phone')).toBe(true);
   });
 
   it('odrzuca niepoprawny email', async () => {

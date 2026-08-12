@@ -29,11 +29,14 @@ export class AuthService {
 
   async register(email: string, password: string, firstName: string) {
     const hashedPassword = await bcrypt.hash(password, 10);
-    return this.usersService.create({
+    const user = await this.usersService.create({
       email,
       password: hashedPassword,
       firstName,
       role: 'user',
     });
+    // Nie zwracaj hasła (hash) w odpowiedzi API
+    const { password: _pw, ...result } = user;
+    return result;
   }
 }

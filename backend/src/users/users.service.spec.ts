@@ -15,6 +15,7 @@ describe('UsersService', () => {
     save: jest.fn(),
     count: jest.fn(),
     increment: jest.fn(),
+    update: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -111,6 +112,32 @@ describe('UsersService', () => {
     it('rzuca NotFoundException gdy user nie istnieje', async () => {
       mockRepo.increment.mockResolvedValue({ affected: 0 });
       await expect(service.incrementTokenVersion(999)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('recordFailedLogin / resetFailedLogins (#81)', () => {
+    it('blokuje konto po przekroczeniu limitu prób', async () => {
+      process.env.LOGIN_MAX_ATTEMPTS = '3';
+      await service.recordFailedLogin({ id: 1, failedLoginAttempts: 2 } as any);
+      const arg = mockRepo.update.mock.calls[0][1];
+      expect(arg.failedLoginAttempts).toBe(3);
+      expect(arg.lockedUntil).toBeInstanceOf(Date);
+    });
+
+    it('nie blokuje przed osiągnięciem limitu', async () => {
+      process.env.LOGIN_MAX_ATTEMPTS = '5';
+      await service.recordFailedLogin({ id: 1, failedLoginAttempts: 1 } as any);
+      const arg = mockRepo.update.mock.calls[0][1];
+      expect(arg.failedLoginAttempts).toBe(2);
+      expect(arg.lockedUntil).toBeNull();
+    });
+
+    it('reset zeruje licznik i odblokowuje', async () => {
+      await service.resetFailedLogins(1);
+      expect(mockRepo.update).toHaveBeenCalledWith(1, {
+        failedLoginAttempts: 0,
+        lockedUntil: null,
+      });
     });
   });
 });

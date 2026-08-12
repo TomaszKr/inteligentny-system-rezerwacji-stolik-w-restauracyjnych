@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException } from '@nestjs/common';
+import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
@@ -19,6 +19,8 @@ describe('AuthService', () => {
     phone: '123456789',
     role: 'user',
     tokenVersion: 0,
+    failedLoginAttempts: 0,
+    lockedUntil: null,
   };
 
   beforeEach(async () => {
@@ -31,6 +33,8 @@ describe('AuthService', () => {
             findByEmail: jest.fn(),
             create: jest.fn(),
             incrementTokenVersion: jest.fn().mockResolvedValue(undefined),
+            recordFailedLogin: jest.fn().mockResolvedValue(undefined),
+            resetFailedLogins: jest.fn().mockResolvedValue(undefined),
           },
         },
         {
@@ -58,16 +62,34 @@ describe('AuthService', () => {
 
       const result = await authService.validateUser('test@example.com', 'password');
 
-      expect(result).toEqual({
-        id: 1,
-        firstName: 'Test',
-        lastName: 'User',
-        email: 'test@example.com',
-        phone: '123456789',
-        role: 'user',
-        tokenVersion: 0,
-      });
+      expect(result).toEqual(
+        expect.objectContaining({
+          id: 1,
+          email: 'test@example.com',
+          role: 'user',
+        }),
+      );
       expect(result).not.toHaveProperty('password');
+    });
+
+    it('rzuca UnauthorizedException gdy konto zablokowane (#81)', async () => {
+      const locked = { ...mockUser, lockedUntil: new Date(Date.now() + 60000) };
+      jest.spyOn(usersService, 'findByEmail').mockResolvedValue(locked as any);
+
+      await expect(
+        authService.validateUser('test@example.com', 'password'),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('rejestruje nieudaną próbę przy złym haśle (#81)', async () => {
+      jest.spyOn(usersService, 'findByEmail').mockResolvedValue(mockUser as any);
+      jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);
+      const spy = jest.spyOn(usersService, 'recordFailedLogin');
+
+      const result = await authService.validateUser('test@example.com', 'zle');
+
+      expect(result).toBeNull();
+      expect(spy).toHaveBeenCalled();
     });
 
     it('should return null if user not found', async () => {

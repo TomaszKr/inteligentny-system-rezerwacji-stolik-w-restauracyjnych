@@ -26,4 +26,11 @@ export class User {
   // Wersja tokenu — inkrementacja unieważnia wszystkie wydane JWT (#78, OWASP A07)
   @Column({ type: 'integer', default: 0 })
   tokenVersion: number;
+
+  // Blokada konta po nieudanych logowaniach (#81, OWASP A04/A07)
+  @Column({ type: 'integer', default: 0 })
+  failedLoginAttempts: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  lockedUntil: Date | null;
 }

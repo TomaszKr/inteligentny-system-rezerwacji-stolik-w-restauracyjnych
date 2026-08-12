@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Param, Body, UseGuards, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Patch, Param, Body, UseGuards, ParseIntPipe, Req } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { AdminGuard } from '../auth/admin.guard';
@@ -32,7 +32,8 @@ export class AdminUsersController {
   async updateRole(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserRoleDto,
+    @Req() req: any,
   ) {
-    return this.usersService.updateRole(id, dto.role);
+    return this.usersService.updateRole(id, dto.role, req.user?.id);
   }
 }

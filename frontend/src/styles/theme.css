@@ -255,7 +255,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
   font-size: 14px; font-weight: 600; cursor: pointer;
   transition: all 0.2s var(--ease);
 }
-.chip:hover { border-color: var(--gold); color: var(--gold-strong); }
+.chip:hover:not(:disabled) { border-color: var(--gold); color: var(--gold-strong); }
+.chip:disabled { opacity: 0.38; cursor: not-allowed; text-decoration: line-through; }
 .chip[aria-pressed="true"], .chip.is-active {
   background: var(--gold-grad); color: #23180a; border-color: transparent;
   box-shadow: var(--shadow-gold);

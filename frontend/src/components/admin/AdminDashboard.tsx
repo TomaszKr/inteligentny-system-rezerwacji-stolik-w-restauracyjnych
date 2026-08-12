@@ -4,12 +4,13 @@ import { Reservation } from '../../types/reservation';
 import { fetchReservations, updateReservationStatus } from '../../services/reservationService';
 import { getToken } from '../../services/authService';
 import { useToast } from '../ui/Toast';
+import TablesManager from './TablesManager';
 import {
   IcCalendar, IcClock, IcUsers, IcUser, IcTable, IcBell, IcLayout,
   IcCheck, IcX, IcSparkle,
 } from '../ui/icons';
 
-type Tab = 'reservations' | 'calendar' | 'live';
+type Tab = 'reservations' | 'calendar' | 'tables' | 'live';
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 const timeOf = (t: Date | string) => new Date(t).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
@@ -134,6 +135,7 @@ const AdminDashboard: React.FC = () => {
       <div className="tabs" role="tablist">
         <button role="tab" aria-selected={tab === 'reservations'} className={`tab ${tab === 'reservations' ? 'is-active' : ''}`} onClick={() => setTab('reservations')}><IcTable size={16} /> Rezerwacje</button>
         <button role="tab" aria-selected={tab === 'calendar'} className={`tab ${tab === 'calendar' ? 'is-active' : ''}`} onClick={() => setTab('calendar')}><IcCalendar size={16} /> Kalendarz</button>
+        <button role="tab" aria-selected={tab === 'tables'} className={`tab ${tab === 'tables' ? 'is-active' : ''}`} onClick={() => setTab('tables')}><IcLayout size={16} /> Stoliki</button>
         <button role="tab" aria-selected={tab === 'live'} className={`tab ${tab === 'live' ? 'is-active' : ''}`} onClick={() => setTab('live')}><IcBell size={16} /> Na żywo{live.length > 0 && <span className="tab-count">{live.length}</span>}</button>
       </div>
 
@@ -210,6 +212,9 @@ const AdminDashboard: React.FC = () => {
           )}
         </div>
       )}
+
+      {/* Stoliki */}
+      {tab === 'tables' && <TablesManager />}
 
       {/* Na żywo */}
       {tab === 'live' && (

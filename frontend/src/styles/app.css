@@ -243,6 +243,20 @@ main { display: block; padding-bottom: calc(var(--bottomnav-h) + env(safe-area-i
 .tl-card { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); }
 .tl-card .faint { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; }
 
+/* Zarządzanie stolikami */
+.add-table-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; padding: 16px; background: var(--surface); border: 1px dashed var(--line-strong); border-radius: var(--r-md); }
+.add-table-bar .field { min-width: 92px; }
+.add-table-bar .btn { margin-left: auto; }
+@media (max-width: 480px) { .add-table-bar .btn { margin-left: 0; width: 100%; } }
+
+.mgmt-table { display: grid; gap: 8px; padding: 16px; background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-sm); transition: border-color 0.2s; }
+.mgmt-table.is-occupied { border-color: color-mix(in srgb, var(--danger) 30%, var(--line)); }
+.mgmt-no { font-family: var(--font-display); font-size: 20px; font-weight: 700; }
+.mgmt-cap { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-soft); font-weight: 600; }
+.mgmt-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.mgmt-actions .btn { flex: 1 1 auto; }
+.mgmt-actions .btn-icon { flex: 0 0 auto; }
+
 .live-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-sm); }
 .live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--success); flex-shrink: 0; box-shadow: 0 0 0 4px var(--success-soft); animation: pulse 1.8s infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }

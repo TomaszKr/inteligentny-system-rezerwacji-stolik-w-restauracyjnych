@@ -4,6 +4,7 @@ import { getJwtSecret } from '../config/jwt-secret';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from '../users/users.module';
+import { MailModule } from '../mail/mail.module';
 import { AuthController } from './auth.controller';
 import { AdminController } from './admin.controller';
 import { AuthService } from './auth.service';
@@ -13,6 +14,7 @@ import { LocalStrategy } from './local.strategy';
 @Module({
   imports: [
     UsersModule,
+    MailModule,
     PassportModule,
     ConfigModule,
     JwtModule.register({

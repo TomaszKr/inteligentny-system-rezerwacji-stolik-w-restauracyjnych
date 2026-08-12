@@ -1,8 +1,20 @@
-import { Injectable, ConflictException, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  Logger,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
+import { randomBytes } from 'crypto';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { MailService } from '../mail/mail.service';
 import * as bcrypt from 'bcryptjs';
 import { User } from '../database/entities/User.entity';
+
+function emailVerificationEnabled(): boolean {
+  return (process.env.EMAIL_VERIFICATION_ENABLED ?? 'true') === 'true';
+}
 
 @Injectable()
 export class AuthService {
@@ -11,6 +23,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -25,6 +38,11 @@ export class AuthService {
     }
 
     if (user && (await bcrypt.compare(password, user.password))) {
+      // Wymóg weryfikacji e-mail (#81) — sprawdzane po poprawnym haśle (bez enumeracji)
+      if (emailVerificationEnabled() && !user.emailVerified) {
+        this.logger.warn(`Logowanie niezweryfikowanego konta: ${email}`);
+        throw new UnauthorizedException('Adres e-mail nie został zweryfikowany');
+      }
       if (user.failedLoginAttempts > 0) {
         await this.usersService.resetFailedLogins(user.id);
       }
@@ -76,6 +94,7 @@ export class AuthService {
       throw new ConflictException('Użytkownik z tym adresem email już istnieje');
     }
     const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationToken = randomBytes(32).toString('hex');
     const user = await this.usersService.create({
       email,
       password: hashedPassword,
@@ -83,10 +102,37 @@ export class AuthService {
       lastName,
       phone,
       role: 'user',
+      emailVerified: false,
+      verificationToken,
     });
     this.logger.log(`Nowe konto zarejestrowane: ${email}`);
-    // Nie zwracaj hasła (hash) w odpowiedzi API
-    const { password: _pw, ...result } = user;
+
+    // Wyślij e-mail weryfikacyjny (fire-and-forget) + zaloguj link (dev/demo bez SMTP)
+    this.mailService
+      .sendVerificationEmail(email, `${firstName} ${lastName}`, verificationToken)
+      .catch((err) => this.logger.error('Nie udało się wysłać e-maila weryfikacyjnego', err));
+    this.logger.log(`Link weryfikacyjny (${email}): /api/auth/verify-email?token=${verificationToken}`);
+
+    // Nie zwracaj hasła ani (domyślnie) tokenu
+    const { password: _pw, verificationToken: _vt, ...result } = user;
+    // Demo bez skrzynki: opcjonalnie zwróć token, by umożliwić weryfikację
+    if ((process.env.EMAIL_VERIFICATION_EXPOSE_TOKEN ?? 'true') === 'true') {
+      return { ...result, verificationToken };
+    }
     return result;
+  }
+
+  /** Weryfikacja adresu e-mail po tokenie (#81). */
+  async verifyEmail(token: string): Promise<{ verified: true }> {
+    if (!token) {
+      throw new BadRequestException('Brak tokenu weryfikacyjnego');
+    }
+    const user = await this.usersService.findByVerificationToken(token);
+    if (!user) {
+      throw new BadRequestException('Nieprawidłowy lub zużyty token weryfikacyjny');
+    }
+    await this.usersService.markEmailVerified(user.id);
+    this.logger.log(`Zweryfikowano e-mail: ${user.email}`);
+    return { verified: true };
   }
 }

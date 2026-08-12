@@ -53,10 +53,14 @@ describe('Proces rezerwacji (e2e)', () => {
 
     // 3. Rejestracja i logowanie klienta
     const email = `e2e-${Date.now()}@x.pl`;
-    await request(server)
+    const reg = await request(server)
       .post('/auth/register')
       .send({ email, password: 'haslo1234', firstName: 'E', lastName: 'E', phone: '+48222' })
       .expect(201);
+    // Weryfikacja e-mail (#81) — token zwracany w odpowiedzi (EMAIL_VERIFICATION_EXPOSE_TOKEN)
+    await request(server)
+      .get(`/auth/verify-email?token=${reg.body.verificationToken}`)
+      .expect(200);
     const clientLogin = await request(server)
       .post('/auth/login')
       .send({ email, password: 'haslo1234' })

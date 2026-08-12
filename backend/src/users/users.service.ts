@@ -60,6 +60,19 @@ export class UsersService {
     });
   }
 
+  /** Znajdź użytkownika po tokenie weryfikacyjnym (#81). */
+  async findByVerificationToken(token: string): Promise<User | undefined> {
+    return this.usersRepository.findOneBy({ verificationToken: token });
+  }
+
+  /** Oznacz e-mail jako zweryfikowany i wyczyść token (#81). */
+  async markEmailVerified(id: number): Promise<void> {
+    await this.usersRepository.update(id, {
+      emailVerified: true,
+      verificationToken: null,
+    });
+  }
+
   /** Lista użytkowników bez pola password (dla panelu admina). */
   async findAll(): Promise<SafeUser[]> {
     const users = await this.usersRepository.find();

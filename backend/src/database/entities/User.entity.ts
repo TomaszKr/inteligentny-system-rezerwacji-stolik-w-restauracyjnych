@@ -33,4 +33,11 @@ export class User {
 
   @Column({ type: 'timestamp', nullable: true })
   lockedUntil: Date | null;
+
+  // Weryfikacja e-mail (#81, OWASP A04)
+  @Column({ type: 'boolean', default: false })
+  emailVerified: boolean;
+
+  @Column({ type: 'varchar', length: 128, nullable: true })
+  verificationToken: string | null;
 }

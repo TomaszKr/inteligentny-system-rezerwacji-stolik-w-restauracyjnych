@@ -68,6 +68,25 @@ export class MailService {
   }
 
   /**
+   * Wysyła e-mail weryfikacyjny z linkiem aktywacyjnym (#81, OWASP A04).
+   */
+  async sendVerificationEmail(
+    to: string,
+    userName: string,
+    token: string,
+  ): Promise<void> {
+    const baseUrl = process.env.APP_URL || 'http://localhost';
+    const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${token}`;
+    const mailOptions = {
+      to,
+      subject: 'Potwierdź adres e-mail',
+      template: './email-verification',
+      context: { userName, verificationUrl },
+    };
+    await this.sendWithRetry(mailOptions, 0, 1, 'Verification');
+  }
+
+  /**
    * Wysyła przypomnienie o rezerwacji (~2h przed wizytą, #21).
    */
   async sendReservationReminder(reservationId: number): Promise<void> {

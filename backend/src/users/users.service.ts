@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../database/entities/User.entity';
@@ -8,6 +8,8 @@ export type SafeUser = Omit<User, 'password'>;
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
@@ -63,6 +65,10 @@ export class UsersService {
 
     user.role = role;
     const saved = await this.usersRepository.save(user);
+    // Audyt zdarzeń bezpieczeństwa (OWASP A09)
+    this.logger.warn(
+      `Zmiana roli: użytkownik #${id} → '${role}' (przez #${actingUserId ?? 'system'})`,
+    );
     const { password: _pw, ...rest } = saved;
     return rest;
   }

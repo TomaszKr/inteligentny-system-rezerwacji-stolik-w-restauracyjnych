@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, Logger } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
@@ -6,6 +6,8 @@ import { User } from '../database/entities/User.entity';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
@@ -14,9 +16,12 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
     if (user && await bcrypt.compare(password, user.password)) {
+      // Audyt zdarzeń bezpieczeństwa (OWASP A09) — bez sekretów
+      this.logger.log(`Udane logowanie: ${email}`);
       const { password: _pw, ...result } = user;
       return result;
     }
+    this.logger.warn(`Nieudane logowanie: ${email}`);
     return null;
   }
 
@@ -48,6 +53,7 @@ export class AuthService {
       phone,
       role: 'user',
     });
+    this.logger.log(`Nowe konto zarejestrowane: ${email}`);
     // Nie zwracaj hasła (hash) w odpowiedzi API
     const { password: _pw, ...result } = user;
     return result;

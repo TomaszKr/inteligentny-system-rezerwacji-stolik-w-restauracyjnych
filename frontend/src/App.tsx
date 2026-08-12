@@ -1,5 +1,6 @@
 import TableMap from './components/table-map/TableMap';
 import ReservationsAdminPanelDemo from './components/admin/ReservationsAdminPanelDemo';
+import DayCalendar from './components/admin/DayCalendar';
 import AvailabilitySearch from './components/availability/AvailabilitySearch';
 import AuthPanel from './components/auth/AuthPanel';
 
@@ -44,6 +45,8 @@ const App = () => {
         tables={tables} 
         onTableSelect={handleTableSelect}
       />
+      {/* #17 — kalendarz rezerwacji na wybrany dzień (admin) */}
+      <DayCalendar />
       {/* Admin panel for managing reservations */}
       <div className="mt-8">
         <ReservationsAdminPanelDemo />

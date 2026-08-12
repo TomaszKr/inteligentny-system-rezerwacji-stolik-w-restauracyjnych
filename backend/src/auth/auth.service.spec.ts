@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { authenticator } from 'otplib';
 import { AuthService } from './auth.service';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
@@ -25,6 +26,8 @@ describe('AuthService', () => {
     lockedUntil: null,
     emailVerified: true,
     verificationToken: null,
+    twoFactorSecret: null,
+    twoFactorEnabled: false,
   };
 
   beforeEach(async () => {
@@ -41,6 +44,9 @@ describe('AuthService', () => {
             resetFailedLogins: jest.fn().mockResolvedValue(undefined),
             findByVerificationToken: jest.fn(),
             markEmailVerified: jest.fn().mockResolvedValue(undefined),
+            findOne: jest.fn(),
+            setTwoFactorSecret: jest.fn().mockResolvedValue(undefined),
+            setTwoFactorEnabled: jest.fn().mockResolvedValue(undefined),
           },
         },
         {
@@ -205,6 +211,53 @@ describe('AuthService', () => {
     it('verifyEmail z nieprawidłowym tokenem → BadRequest', async () => {
       jest.spyOn(usersService, 'findByVerificationToken').mockResolvedValue(undefined);
       await expect(authService.verifyEmail('zly')).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('2FA (#88)', () => {
+    it('login z włączonym 2FA bez kodu → UnauthorizedException', async () => {
+      const u = { ...mockUser, twoFactorEnabled: true, twoFactorSecret: authenticator.generateSecret() };
+      await expect(authService.login(u as any)).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('login z włączonym 2FA i poprawnym kodem → token', async () => {
+      const secret = authenticator.generateSecret();
+      const code = authenticator.generate(secret);
+      const u = { ...mockUser, twoFactorEnabled: true, twoFactorSecret: secret };
+      jest.spyOn(jwtService, 'sign').mockReturnValue('jwt-2fa');
+
+      const result = await authService.login(u as any, code);
+
+      expect(result).toEqual({ access_token: 'jwt-2fa' });
+    });
+
+    it('setupTwoFactor generuje sekret i zapisuje', async () => {
+      const spy = jest.spyOn(usersService, 'setTwoFactorSecret');
+      const res = await authService.setupTwoFactor(1, 'a@a.pl');
+      expect(res.secret).toEqual(expect.any(String));
+      expect(res.otpauthUrl).toContain('otpauth://');
+      expect(spy).toHaveBeenCalledWith(1, res.secret);
+    });
+
+    it('enableTwoFactor z poprawnym kodem → enabled', async () => {
+      const secret = authenticator.generateSecret();
+      jest.spyOn(usersService, 'findOne').mockResolvedValue({ id: 1, twoFactorSecret: secret } as any);
+      const spy = jest.spyOn(usersService, 'setTwoFactorEnabled');
+
+      const res = await authService.enableTwoFactor(1, authenticator.generate(secret));
+
+      expect(res).toEqual({ enabled: true });
+      expect(spy).toHaveBeenCalledWith(1, true);
+    });
+
+    it('enableTwoFactor z błędnym kodem → Unauthorized', async () => {
+      jest.spyOn(usersService, 'findOne').mockResolvedValue({ id: 1, twoFactorSecret: authenticator.generateSecret() } as any);
+      await expect(authService.enableTwoFactor(1, '000000')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('enableTwoFactor bez setupu → BadRequest', async () => {
+      jest.spyOn(usersService, 'findOne').mockResolvedValue({ id: 1, twoFactorSecret: null } as any);
+      await expect(authService.enableTwoFactor(1, '123456')).rejects.toThrow(BadRequestException);
     });
   });
 });

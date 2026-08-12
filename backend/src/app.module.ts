@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { User } from './database/entities/User.entity';
 import { Reservation } from './database/entities/Reservation.entity';
 import { Table } from './database/entities/Table.entity';
@@ -21,12 +23,26 @@ import { MailModule } from './mail/mail.module';
       entities: [User, Reservation, Table, Restaurant],
       synchronize: true,
     }),
+    // Rate limiting — domyślny (prywatny) limit dla endpointów uwierzytelnionych.
+    // Publiczne endpointy (auth) mają ostrzejszy limit przez @Throttle w kontrolerze.
+    ThrottlerModule.forRoot([
+      {
+        ttl: parseInt(process.env.RATE_LIMIT_TTL, 10) || 60000,
+        limit: parseInt(process.env.RATE_LIMIT_MAX, 10) || 100,
+      },
+    ]),
     AuthModule,
     ReservationsModule,
     TablesModule,
     MailModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    // Globalny guard rate limitingu — zwraca 429 po przekroczeniu limitu
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

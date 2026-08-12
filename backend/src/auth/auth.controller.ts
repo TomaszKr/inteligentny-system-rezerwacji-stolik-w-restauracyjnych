@@ -1,4 +1,5 @@
 import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
@@ -6,6 +7,13 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
 @ApiTags('auth')
+// Endpointy publiczne (bez JWT) — ostrzejszy limit z env (anti brute-force / spam)
+@Throttle({
+  default: {
+    ttl: parseInt(process.env.RATE_LIMIT_PUBLIC_TTL, 10) || 60000,
+    limit: parseInt(process.env.RATE_LIMIT_PUBLIC_MAX, 10) || 10,
+  },
+})
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}

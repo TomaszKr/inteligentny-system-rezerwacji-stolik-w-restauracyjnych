@@ -16,6 +16,10 @@ export class Reservation {
   @Column({ type: 'varchar', length: 50, nullable: true })
   status: string;
 
+  // Czy wysłano przypomnienie 2h przed wizytą (#21) — zapobiega duplikatom
+  @Column({ type: 'boolean', default: false })
+  reminderSent: boolean;
+
   @ManyToOne(() => User, user => user.id)
   @JoinColumn({ name: 'userId' })
   user: User;

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 import { User } from './database/entities/User.entity';
 import { Reservation } from './database/entities/Reservation.entity';
@@ -10,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { TablesModule } from './tables/tables.module';
 import { MailModule } from './mail/mail.module';
+import { RemindersModule } from './reminders/reminders.module';
 
 @Module({
   imports: [
@@ -31,10 +33,12 @@ import { MailModule } from './mail/mail.module';
         limit: parseInt(process.env.RATE_LIMIT_MAX, 10) || 100,
       },
     ]),
+    ScheduleModule.forRoot(),
     AuthModule,
     ReservationsModule,
     TablesModule,
     MailModule,
+    RemindersModule,
   ],
   controllers: [],
   providers: [

@@ -30,11 +30,26 @@ export class AuthController {
   @ApiResponse({
     status: 201,
     description: 'Utworzono użytkownika (bez pola password)',
-    schema: { example: { id: 1, email: 'jan@example.com', firstName: 'Jan', role: 'user' } },
+    schema: {
+      example: {
+        id: 1,
+        email: 'jan@example.com',
+        firstName: 'Jan',
+        lastName: 'Kowalski',
+        phone: '+48123456789',
+        role: 'user',
+      },
+    },
   })
   @ApiResponse({ status: 400, description: 'Błąd walidacji danych wejściowych' })
   @ApiResponse({ status: 500, description: 'Znany brak: duplikat email nie jest obsłużony' })
   async register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto.email, dto.password, dto.firstName);
+    return this.authService.register(
+      dto.email,
+      dto.password,
+      dto.firstName,
+      dto.lastName,
+      dto.phone,
+    );
   }
 }

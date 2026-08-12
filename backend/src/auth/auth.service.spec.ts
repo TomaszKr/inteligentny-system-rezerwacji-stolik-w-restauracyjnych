@@ -91,7 +91,7 @@ describe('AuthService', () => {
       jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashedPassword' as never);
       jest.spyOn(usersService, 'create').mockResolvedValue(mockUser);
 
-      const result = await authService.register('test@example.com', 'password', 'Test User');
+      const result = await authService.register('test@example.com', 'password', 'Test', 'User', '+48123456789');
 
       const { password: _pw, ...expected } = mockUser;
       expect(result).toEqual(expected);
@@ -101,7 +101,7 @@ describe('AuthService', () => {
       jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashedPassword' as never);
       jest.spyOn(usersService, 'create').mockResolvedValue(mockUser);
 
-      const result = await authService.register('test@example.com', 'password', 'Test User');
+      const result = await authService.register('test@example.com', 'password', 'Test', 'User', '+48123456789');
 
       expect(result).not.toHaveProperty('password');
     });

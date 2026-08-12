@@ -27,12 +27,20 @@ export class AuthService {
     };
   }
 
-  async register(email: string, password: string, firstName: string) {
+  async register(
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    phone: string,
+  ) {
     const hashedPassword = await bcrypt.hash(password, 10);
     const user = await this.usersService.create({
       email,
       password: hashedPassword,
       firstName,
+      lastName,
+      phone,
       role: 'user',
     });
     // Nie zwracaj hasła (hash) w odpowiedzi API

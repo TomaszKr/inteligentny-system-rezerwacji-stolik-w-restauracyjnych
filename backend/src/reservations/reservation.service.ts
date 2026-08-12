@@ -4,11 +4,13 @@ import {
   BadRequestException,
   NotFoundException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Reservation } from '../database/entities/Reservation.entity';
 import { Table } from '../database/entities/Table.entity';
+import { ReservationStatus } from './enums/reservation-status.enum';
 import { ReservationGateway } from './reservation.gateway';
 import { UsersService } from '../users/users.service';
 import { MailService } from '../mail/mail.service';
@@ -118,6 +120,25 @@ export class ReservationService {
       throw new NotFoundException('Reservation not found');
     }
     Object.assign(reservation, updateData);
+    return this.reservationRepository.save(reservation);
+  }
+
+  /**
+   * Odwołanie rezerwacji przez klienta (#15) — soft cancel (status "Anulowana").
+   * Tylko właściciel rezerwacji może ją odwołać.
+   */
+  async cancel(id: number, userId: number): Promise<Reservation> {
+    const reservation = await this.reservationRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+    if (!reservation) {
+      throw new NotFoundException('Reservation not found');
+    }
+    if (!reservation.user || reservation.user.id !== userId) {
+      throw new ForbiddenException('You can only cancel your own reservation');
+    }
+    reservation.status = ReservationStatus.CANCELLED;
     return this.reservationRepository.save(reservation);
   }
 }

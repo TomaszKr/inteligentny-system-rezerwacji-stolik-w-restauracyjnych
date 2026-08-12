@@ -30,6 +30,52 @@ export const fetchReservations = async (date?: string): Promise<Reservation[]> =
   }
 };
 
+export interface CreateReservationPayload {
+  tableId: number;
+  reservationTime: string; // ISO 8601
+  guests: number;
+}
+
+/**
+ * Tworzy rezerwację stolika (wymaga zalogowania). Mapuje kody błędów backendu
+ * na czytelne komunikaty (409 kolizja, 404 brak stolika, 401 brak sesji).
+ */
+export const createReservation = async (
+  payload: CreateReservationPayload,
+): Promise<Reservation> => {
+  const response = await fetch(`${API_BASE_URL}/reservations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    const msg =
+      response.status === 409
+        ? 'Ten stolik został właśnie zarezerwowany w wybranym czasie. Wybierz inny.'
+        : response.status === 401
+        ? 'Zaloguj się, aby dokończyć rezerwację.'
+        : response.status === 404
+        ? 'Wybrany stolik nie istnieje.'
+        : response.status === 400
+        ? 'Nieprawidłowa data lub liczba gości.'
+        : `Nie udało się utworzyć rezerwacji (HTTP ${response.status}).`;
+    throw new Error(msg);
+  }
+  return response.json();
+};
+
+/** Odwołuje własną rezerwację (status → Anulowana). */
+export const cancelReservation = async (id: number): Promise<Reservation> => {
+  const response = await fetch(`${API_BASE_URL}/reservations/${id}/cancel`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+  });
+  if (!response.ok) {
+    throw new Error(`Nie udało się odwołać rezerwacji (HTTP ${response.status}).`);
+  }
+  return response.json();
+};
+
 /**
  * Update reservation status
  */

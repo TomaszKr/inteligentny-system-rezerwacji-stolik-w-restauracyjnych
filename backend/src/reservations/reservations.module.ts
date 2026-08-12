@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
+import { getJwtSecret } from '../config/jwt-secret';
 import { Reservation } from '../database/entities/Reservation.entity';
 import { User } from '../database/entities/User.entity';
 import { UsersModule } from '../users/users.module';
@@ -16,7 +17,7 @@ import { AdminReservationsController } from './admin-reservations.controller';
     UsersModule,
     MailModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'secretKey',
+      secret: getJwtSecret(),
       signOptions: { expiresIn: '1h' },
     }),
   ],

@@ -17,7 +17,15 @@ export class AdminSeederService implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     const email = process.env.ADMIN_EMAIL || 'admin@restaurant.local';
-    const password = process.env.ADMIN_PASSWORD || 'admin12345';
+    const password = process.env.ADMIN_PASSWORD;
+
+    // Nie twórz konta z domyślnym/słabym hasłem (#63) — wymagaj ADMIN_PASSWORD z env
+    if (!password || password.length < 8) {
+      this.logger.warn(
+        'ADMIN_PASSWORD nie ustawione lub za krótkie (min. 8 znaków) — pomijam seed konta administratora.',
+      );
+      return;
+    }
 
     try {
       const existing = await this.usersService.findByEmail(email);
@@ -36,10 +44,7 @@ export class AdminSeederService implements OnModuleInit {
         role: UserRole.ADMIN,
       });
 
-      this.logger.warn(
-        `Utworzono konto administratora (${email}). ` +
-          'ZMIEŃ domyślne hasło przez ADMIN_PASSWORD w .env dla środowisk produkcyjnych.',
-      );
+      this.logger.log(`Utworzono konto administratora (${email}) z hasłem z ADMIN_PASSWORD.`);
     } catch (err) {
       this.logger.error('Nie udało się zaseedować konta administratora', err as Error);
     }

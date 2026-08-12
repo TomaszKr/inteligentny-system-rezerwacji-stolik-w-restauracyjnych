@@ -34,7 +34,7 @@ jobs:
       DB_NAME: appdb
       JWT_SECRET: ci-test-secret
       ADMIN_EMAIL: admin@restaurant.local
-      ADMIN_PASSWORD: admin12345
+      ADMIN_PASSWORD: ci-strong-admin-pass
 
     defaults:
       run:

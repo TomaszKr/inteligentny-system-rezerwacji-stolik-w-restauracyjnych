@@ -1,4 +1,5 @@
 import { Reservation } from '../types/reservation';
+import { authHeaders } from './authService';
 
 // Base URL for API - should be configured via environment variables
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -12,8 +13,7 @@ export const fetchReservations = async (): Promise<Reservation[]> => {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        // Add auth token if needed
-        // 'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        ...authHeaders(),
       },
     });
 
@@ -41,8 +41,7 @@ export const updateReservationStatus = async (
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        // Add auth token if needed
-        // 'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        ...authHeaders(),
       },
       body: JSON.stringify({ status }),
     });

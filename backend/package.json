@@ -98,6 +98,8 @@
     "testEnvironment": "node"
   },
   "overrides": {
-    "nodemailer": "^9.0.5"
+    "nodemailer": "^9.0.5",
+    "linkify-it": "^5.0.2",
+    "js-yaml": "^5.2.3"
   }
 }

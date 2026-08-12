@@ -29,7 +29,7 @@ export class AdminReservationsController {
   @ApiResponse({ status: 400, description: 'Nieprawidłowy enum statusu lub :id' })
   @ApiResponse({ status: 401, description: 'Brak lub nieważny token JWT' })
   @ApiResponse({ status: 403, description: 'Użytkownik nie jest administratorem' })
-  @ApiResponse({ status: 500, description: 'Znany brak: rezerwacja o podanym id nie istnieje → generic Error' })
+  @ApiResponse({ status: 404, description: 'Rezerwacja o podanym id nie istnieje' })
   async updateStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateReservationStatusDto,

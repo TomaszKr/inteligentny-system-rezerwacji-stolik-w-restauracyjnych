@@ -120,6 +120,24 @@ describe('ReservationService', () => {
     );
   });
 
+  it('(a2) po udanej rezerwacji wysyła potwierdzenie e-mail do klienta (#14)', async () => {
+    mockQueryRunner.manager.findOne.mockResolvedValue({ id: 5 });
+    mockQueryRunner.manager.createQueryBuilder.mockReturnValue(collisionQB(null));
+    // fullReservation ładowany po commicie (repo.findOne) — id trafia do maila
+    mockRepo.findOne.mockResolvedValueOnce({ id: 1 });
+
+    const input: CreateReservationInput = {
+      reservationTime: futureDate,
+      guests: 4,
+      tableId: 5,
+      user: { id: 1 },
+    };
+
+    await service.create(input);
+
+    expect(mockMailService.sendReservationConfirmation).toHaveBeenCalledWith(1);
+  });
+
   it('(b) rzuca ConflictException przy kolizji i nie zapisuje', async () => {
     mockQueryRunner.manager.findOne.mockResolvedValue({ id: 5 });
     mockQueryRunner.manager.createQueryBuilder.mockReturnValue(

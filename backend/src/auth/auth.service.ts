@@ -26,10 +26,25 @@ export class AuthService {
   }
 
   async login(user: User) {
-    const payload = { email: user.email, sub: user.id, role: user.role };
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      role: user.role,
+      tv: user.tokenVersion ?? 0,
+    };
     return {
       access_token: this.jwtService.sign(payload),
     };
+  }
+
+  /**
+   * Wylogowanie/unieważnienie sesji (#78) — inkrementuje tokenVersion, przez co
+   * wszystkie dotychczas wydane tokeny użytkownika stają się nieważne.
+   */
+  async logout(userId: number): Promise<{ success: true }> {
+    await this.usersService.incrementTokenVersion(userId);
+    this.logger.log(`Wylogowanie/unieważnienie sesji: użytkownik #${userId}`);
+    return { success: true };
   }
 
   async register(

@@ -22,4 +22,8 @@ export class User {
 
   @Column({ length: 50, default: 'user' })
   role: string;
+
+  // Wersja tokenu — inkrementacja unieważnia wszystkie wydane JWT (#78, OWASP A07)
+  @Column({ type: 'integer', default: 0 })
+  tokenVersion: number;
 }

@@ -14,6 +14,7 @@ describe('UsersService', () => {
     create: jest.fn(),
     save: jest.fn(),
     count: jest.fn(),
+    increment: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -97,6 +98,19 @@ describe('UsersService', () => {
       const result = await service.updateRole(2, UserRole.USER, 99);
 
       expect(result.role).toBe(UserRole.USER);
+    });
+  });
+
+  describe('incrementTokenVersion (#78)', () => {
+    it('inkrementuje tokenVersion', async () => {
+      mockRepo.increment.mockResolvedValue({ affected: 1 });
+      await service.incrementTokenVersion(5);
+      expect(mockRepo.increment).toHaveBeenCalledWith({ id: 5 }, 'tokenVersion', 1);
+    });
+
+    it('rzuca NotFoundException gdy user nie istnieje', async () => {
+      mockRepo.increment.mockResolvedValue({ affected: 0 });
+      await expect(service.incrementTokenVersion(999)).rejects.toThrow(NotFoundException);
     });
   });
 });

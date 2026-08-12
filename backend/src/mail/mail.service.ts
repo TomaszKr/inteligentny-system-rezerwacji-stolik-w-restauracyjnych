@@ -68,6 +68,49 @@ export class MailService {
   }
 
   /**
+   * Wysyła przypomnienie o rezerwacji (~2h przed wizytą, #21).
+   */
+  async sendReservationReminder(reservationId: number): Promise<void> {
+    const reservation = await this.reservationRepository.findOne({
+      where: { id: reservationId },
+      relations: ['user', 'table', 'table.restaurant'],
+    });
+
+    if (!reservation) {
+      this.logger.warn(`Reservation ${reservationId} not found — skipping reminder`);
+      return;
+    }
+
+    const { user, table, guests } = reservation;
+    const restaurant = table?.restaurant;
+
+    if (!user || !restaurant || !table) {
+      this.logger.error(
+        `Incomplete reservation data for id=${reservationId} — cannot send reminder`,
+      );
+      return;
+    }
+
+    const mailOptions = {
+      to: user.email,
+      subject: `Przypomnienie o rezerwacji #${reservation.id}`,
+      template: './reservation-reminder',
+      context: {
+        userName: `${user.firstName} ${user.lastName}`,
+        reservationDate: this.formatDate(reservation.reservationTime),
+        reservationTime: this.formatTime(reservation.reservationTime),
+        tableNumber: table.tableNumber,
+        guestsCount: guests,
+        restaurantName: restaurant.name,
+        restaurantAddress: restaurant.address,
+        reservationId: reservation.id,
+      },
+    };
+
+    await this.sendWithRetry(mailOptions, reservation.id, 1, 'Reminder');
+  }
+
+  /**
    * Sends an email with retry logic for transient errors.
    * Exponential backoff: 1s, 2s, 4s.
    */
@@ -75,11 +118,12 @@ export class MailService {
     mailOptions: any,
     reservationId: number,
     attempt: number = 1,
+    label: string = 'Confirmation',
   ): Promise<void> {
     try {
       await this.mailerService.sendMail(mailOptions);
       this.logger.log(
-        `Confirmation email sent for reservation #${reservationId}`,
+        `${label} email sent for reservation #${reservationId}`,
       );
     } catch (error) {
       const classifiedError = this.classifyError(error);
@@ -98,7 +142,7 @@ export class MailService {
       );
 
       await this.sleep(delayMs);
-      await this.sendWithRetry(mailOptions, reservationId, attempt + 1);
+      await this.sendWithRetry(mailOptions, reservationId, attempt + 1, label);
     }
   }
 

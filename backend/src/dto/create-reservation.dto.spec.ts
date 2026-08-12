@@ -73,4 +73,14 @@ describe('CreateReservationDto', () => {
     const err = errors.find((e) => e.property === 'guests');
     expect(err?.constraints).toHaveProperty('min');
   });
+
+  it('odrzuca guests powyżej limitu (naruszenie @Max(50)) (#69)', async () => {
+    const errors = await validateDto({
+      reservationTime: futureISO(),
+      guests: 999,
+      tableId: 1,
+    });
+    const err = errors.find((e) => e.property === 'guests');
+    expect(err?.constraints).toHaveProperty('max');
+  });
 });

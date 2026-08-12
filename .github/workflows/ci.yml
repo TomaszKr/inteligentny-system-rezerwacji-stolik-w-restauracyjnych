@@ -1,0 +1,80 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend — testy jednostkowe, e2e, build
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: appuser
+          POSTGRES_PASSWORD: changeme
+          POSTGRES_DB: appdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U appuser -d appdb"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: appuser
+      DB_PASSWORD: changeme
+      DB_NAME: appdb
+      JWT_SECRET: ci-test-secret
+      ADMIN_EMAIL: admin@restaurant.local
+      ADMIN_PASSWORD: admin12345
+
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Instalacja zależności
+        run: npm ci
+
+      - name: Testy jednostkowe + pokrycie (próg 70%)
+        run: npm run test:cov
+
+      - name: Testy e2e (proces rezerwacji, zapis do DB)
+        run: npm run test:e2e
+
+      - name: Build
+        run: npm run build
+
+  frontend:
+    name: Frontend — build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Instalacja zależności
+        run: npm ci
+      - name: Build
+        run: npm run build

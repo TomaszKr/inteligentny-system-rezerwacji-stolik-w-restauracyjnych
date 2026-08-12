@@ -7,6 +7,7 @@ import { Reservation } from '../../database/entities/Reservation.entity';
 import { CreateRestaurantDto } from '../dto/create-restaurant.dto';
 import { CreateTableDto } from '../dto/create-table.dto';
 import { UpdateTableDto } from '../dto/update-table.dto';
+import { TableStatus } from '../enums/table-status.enum';
 
 @Injectable()
 export class TablesManagementService {
@@ -60,6 +61,16 @@ export class TablesManagementService {
     }
 
     Object.assign(table, dto);
+    return this.tableRepository.save(table);
+  }
+
+  /** Ręczna zmiana statusu stolika przez menedżera (#18). */
+  async updateStatus(id: number, status: TableStatus): Promise<Table> {
+    const table = await this.tableRepository.findOneBy({ id });
+    if (!table) {
+      throw new NotFoundException('Table not found');
+    }
+    table.status = status;
     return this.tableRepository.save(table);
   }
 

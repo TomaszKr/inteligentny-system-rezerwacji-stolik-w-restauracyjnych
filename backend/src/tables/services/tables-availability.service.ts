@@ -5,6 +5,7 @@ import { Table } from '../../database/entities/Table.entity';
 import { Reservation } from '../../database/entities/Reservation.entity';
 import { CheckAvailabilityDto } from '../dto/check-availability.dto';
 import { TableAvailabilityDto } from '../dto/table-availability.dto';
+import { TableStatus } from '../enums/table-status.enum';
 
 @Injectable()
 export class TablesAvailabilityService {
@@ -39,6 +40,7 @@ export class TablesAvailabilityService {
         )
         .where('table.restaurantId = :restaurantId', { restaurantId })
         .andWhere('table.capacity >= :guests', { guests })
+        .andWhere('table.status = :freeStatus', { freeStatus: TableStatus.FREE }) // pomiń ręcznie zajęte (#18)
         .andWhere('reservation.id IS NULL') // tylko stoliki bez rezerwacji
         .select([
           'table.id',

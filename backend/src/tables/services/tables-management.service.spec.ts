@@ -5,6 +5,7 @@ import { TablesManagementService } from './tables-management.service';
 import { Restaurant } from '../../database/entities/Restaurant.entity';
 import { Table } from '../../database/entities/Table.entity';
 import { Reservation } from '../../database/entities/Reservation.entity';
+import { TableStatus } from '../enums/table-status.enum';
 
 describe('TablesManagementService', () => {
   let service: TablesManagementService;
@@ -125,6 +126,29 @@ describe('TablesManagementService', () => {
 
       expect(mockTableRepository.save).toHaveBeenCalledWith({ id: 1, tableNumber: 1, capacity: 8 });
       expect(result.capacity).toBe(8);
+    });
+  });
+
+  describe('updateStatus (#18)', () => {
+    it('zmienia status stolika gdy istnieje', async () => {
+      mockTableRepository.findOneBy.mockResolvedValue({ id: 1, status: 'wolny' });
+      mockTableRepository.save.mockImplementation((t) => Promise.resolve(t));
+
+      const result = await service.updateStatus(1, TableStatus.OCCUPIED);
+
+      expect(mockTableRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 1, status: 'zajęty' }),
+      );
+      expect(result.status).toBe('zajęty');
+    });
+
+    it('rzuca NotFoundException gdy stolik nie istnieje', async () => {
+      mockTableRepository.findOneBy.mockResolvedValue(null);
+
+      await expect(service.updateStatus(999, TableStatus.OCCUPIED)).rejects.toThrow(
+        NotFoundException,
+      );
+      expect(mockTableRepository.save).not.toHaveBeenCalled();
     });
   });
 

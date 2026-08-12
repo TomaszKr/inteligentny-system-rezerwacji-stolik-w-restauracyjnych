@@ -16,6 +16,7 @@ import { AdminGuard } from '../../auth/admin.guard';
 import { TablesManagementService } from '../services/tables-management.service';
 import { CreateTableDto } from '../dto/create-table.dto';
 import { UpdateTableDto } from '../dto/update-table.dto';
+import { UpdateTableStatusDto } from '../dto/update-table-status.dto';
 
 @ApiTags('admin')
 @ApiBearerAuth('access-token')
@@ -54,6 +55,17 @@ export class AdminTablesController {
   @ApiResponse({ status: 404, description: 'Stolik nie istnieje' })
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateTableDto) {
     return this.tablesManagementService.updateTable(id, dto);
+  }
+
+  @Patch(':id/status')
+  @ApiOperation({ summary: 'Ręcznie zmień status stolika: wolny/zajęty (wymaga roli admin)' })
+  @ApiResponse({ status: 200, description: 'Status stolika zaktualizowany' })
+  @ApiResponse({ status: 400, description: 'Nieprawidłowy status' })
+  @ApiResponse({ status: 401, description: 'Brak lub nieważny token JWT' })
+  @ApiResponse({ status: 403, description: 'Użytkownik nie jest administratorem' })
+  @ApiResponse({ status: 404, description: 'Stolik nie istnieje' })
+  updateStatus(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateTableStatusDto) {
+    return this.tablesManagementService.updateStatus(id, dto.status);
   }
 
   @Delete(':id')

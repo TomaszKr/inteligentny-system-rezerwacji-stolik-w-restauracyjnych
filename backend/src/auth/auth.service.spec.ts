@@ -18,6 +18,7 @@ describe('AuthService', () => {
     password: '$2b$10$hashedPassword',
     phone: '123456789',
     role: 'user',
+    tokenVersion: 0,
   };
 
   beforeEach(async () => {
@@ -29,6 +30,7 @@ describe('AuthService', () => {
           useValue: {
             findByEmail: jest.fn(),
             create: jest.fn(),
+            incrementTokenVersion: jest.fn().mockResolvedValue(undefined),
           },
         },
         {
@@ -63,7 +65,9 @@ describe('AuthService', () => {
         email: 'test@example.com',
         phone: '123456789',
         role: 'user',
+        tokenVersion: 0,
       });
+      expect(result).not.toHaveProperty('password');
     });
 
     it('should return null if user not found', async () => {
@@ -115,6 +119,15 @@ describe('AuthService', () => {
         authService.register('test@example.com', 'password', 'Test', 'User', '+48123456789'),
       ).rejects.toThrow(ConflictException);
       expect(createSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('logout (#78)', () => {
+    it('inkrementuje tokenVersion użytkownika', async () => {
+      const spy = jest.spyOn(usersService, 'incrementTokenVersion');
+      const result = await authService.logout(7);
+      expect(spy).toHaveBeenCalledWith(7);
+      expect(result).toEqual({ success: true });
     });
   });
 });

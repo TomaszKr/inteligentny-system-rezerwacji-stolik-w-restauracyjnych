@@ -52,6 +52,13 @@ export class ReservationGateway implements OnGatewayConnection, OnGatewayDisconn
         return;
       }
 
+      // Odrzuć tokeny unieważnione przez logout (#78)
+      if ((decoded.tv ?? 0) !== (user.tokenVersion ?? 0)) {
+        this.logger.warn(`Unieważniony token — user ID: ${userId}`);
+        client.disconnect();
+        return;
+      }
+
       // Store connected manager
       this.connectedManagers.set(client.id, userId);
       this.logger.log(`Manager connected: ${userId} (client: ${client.id})`);

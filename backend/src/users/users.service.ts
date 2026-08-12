@@ -28,6 +28,14 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
+  /** Inkrementuje tokenVersion — unieważnia wszystkie wydane tokeny usera (#78). */
+  async incrementTokenVersion(id: number): Promise<void> {
+    const result = await this.usersRepository.increment({ id }, 'tokenVersion', 1);
+    if (!result.affected) {
+      throw new NotFoundException('User not found');
+    }
+  }
+
   /** Lista użytkowników bez pola password (dla panelu admina). */
   async findAll(): Promise<SafeUser[]> {
     const users = await this.usersRepository.find();

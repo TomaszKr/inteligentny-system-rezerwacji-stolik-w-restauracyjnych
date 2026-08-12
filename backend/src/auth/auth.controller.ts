@@ -1,8 +1,9 @@
-import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { ApiTags, ApiOperation, ApiBody, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
+import { JwtAuthGuard } from './jwt-auth.guard';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
@@ -59,5 +60,16 @@ export class AuthController {
       dto.lastName,
       dto.phone,
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Wyloguj — unieważnia wszystkie tokeny użytkownika' })
+  @ApiResponse({ status: 200, description: 'Sesje unieważnione' })
+  @ApiResponse({ status: 401, description: 'Brak lub nieważny token JWT' })
+  async logout(@Req() req: any) {
+    return this.authService.logout(req.user.id);
   }
 }

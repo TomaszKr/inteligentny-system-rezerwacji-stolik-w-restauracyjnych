@@ -60,6 +60,30 @@ describe('RegisterDto', () => {
     expect(err?.constraints).toHaveProperty('minLength');
   });
 
+  it('odrzuca hasło bez cyfry (polityka złożoności #79)', async () => {
+    const errors = await validateDto({
+      email: 'jan.kowalski@example.com',
+      password: 'samesamiliteryy',
+      firstName: 'Jan',
+      lastName: 'Kowalski',
+      phone: '+48123456789',
+    });
+    const err = errors.find((e) => e.property === 'password');
+    expect(err?.constraints).toHaveProperty('matches');
+  });
+
+  it('odrzuca hasło bez litery (polityka złożoności #79)', async () => {
+    const errors = await validateDto({
+      email: 'jan.kowalski@example.com',
+      password: '1234567890',
+      firstName: 'Jan',
+      lastName: 'Kowalski',
+      phone: '+48123456789',
+    });
+    const err = errors.find((e) => e.property === 'password');
+    expect(err?.constraints).toHaveProperty('matches');
+  });
+
   it('odrzuca brak wymaganego firstName', async () => {
     const errors = await validateDto({
       email: 'jan.kowalski@example.com',

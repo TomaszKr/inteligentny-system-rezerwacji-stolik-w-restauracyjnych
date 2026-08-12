@@ -52,6 +52,10 @@ jobs:
       - name: Instalacja zależności
         run: npm ci
 
+      - name: Audyt zależności (OWASP A06) — raportujący
+        run: npm audit --audit-level=high
+        continue-on-error: true
+
       - name: Testy jednostkowe + pokrycie (próg 70%)
         run: npm run test:cov
 

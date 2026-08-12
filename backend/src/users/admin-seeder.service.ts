@@ -42,6 +42,7 @@ export class AdminSeederService implements OnModuleInit {
         lastName: 'Systemowy',
         phone: '000000000',
         role: UserRole.ADMIN,
+        emailVerified: true,
       });
 
       this.logger.log(`Utworzono konto administratora (${email}) z hasłem z ADMIN_PASSWORD.`);

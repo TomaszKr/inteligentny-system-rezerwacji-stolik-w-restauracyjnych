@@ -1,6 +1,6 @@
-import { Controller, Post, Body, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBody, ApiQuery, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -60,6 +60,15 @@ export class AuthController {
       dto.lastName,
       dto.phone,
     );
+  }
+
+  @Get('verify-email')
+  @ApiOperation({ summary: 'Weryfikacja adresu e-mail (token z linku)' })
+  @ApiQuery({ name: 'token', required: true, description: 'Token weryfikacyjny' })
+  @ApiResponse({ status: 200, description: 'E-mail zweryfikowany' })
+  @ApiResponse({ status: 400, description: 'Brak lub nieprawidłowy token' })
+  async verifyEmail(@Query('token') token: string) {
+    return this.authService.verifyEmail(token);
   }
 
   @UseGuards(JwtAuthGuard)

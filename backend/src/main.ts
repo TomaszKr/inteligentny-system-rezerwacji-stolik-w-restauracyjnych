@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 
@@ -41,6 +41,16 @@ async function bootstrap() {
       .build();
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('docs', app, document, { swaggerOptions: { persistAuthorization: true } });
+  }
+
+  // Ostrzeżenie: ekspozycja tokenu weryfikacyjnego w produkcji omija sens weryfikacji e-mail (#81)
+  if (
+    process.env.NODE_ENV === 'production' &&
+    (process.env.EMAIL_VERIFICATION_EXPOSE_TOKEN ?? 'true') === 'true'
+  ) {
+    new Logger('Bootstrap').warn(
+      'EMAIL_VERIFICATION_EXPOSE_TOKEN=true w produkcji — token weryfikacyjny jest zwracany w odpowiedzi rejestracji. Ustaw false.',
+    );
   }
 
   await app.listen(3000);

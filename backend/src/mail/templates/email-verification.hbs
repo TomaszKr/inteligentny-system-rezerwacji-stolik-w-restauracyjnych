@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Weryfikacja adresu e-mail</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .header { background-color: #2c3e50; color: #ffffff; padding: 24px; text-align: center; }
+    .header h1 { margin: 0; font-size: 22px; }
+    .content { padding: 24px; color: #333333; line-height: 1.6; }
+    .btn { display: inline-block; margin: 16px 0; padding: 12px 20px; background-color: #2c3e50; color: #ffffff; text-decoration: none; border-radius: 6px; }
+    .footer { background-color: #ecf0f1; padding: 16px; text-align: center; font-size: 12px; color: #7f8c8d; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header"><h1>Potwierdź adres e-mail</h1></div>
+    <div class="content">
+      <p>Dzień dobry {{userName}},</p>
+      <p>Dziękujemy za rejestrację. Aby aktywować konto, potwierdź swój adres e-mail:</p>
+      <p><a class="btn" href="{{verificationUrl}}">Potwierdź e-mail</a></p>
+      <p>Jeśli przycisk nie działa, otwórz link: <br>{{verificationUrl}}</p>
+    </div>
+    <div class="footer"><p>Ta wiadomość została wygenerowana automatycznie.</p></div>
+  </div>
+</body>
+</html>

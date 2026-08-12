@@ -23,7 +23,9 @@ import { RemindersModule } from './reminders/reminders.module';
       password: process.env.DB_PASSWORD || 'changeme',
       database: process.env.DB_NAME || 'appdb',
       entities: [User, Reservation, Table, Restaurant],
-      synchronize: true,
+      // Auto-sync schematu. Domyślnie włączone (demo/dev, docker compose polega na tym).
+      // W PRODUKCJI ustaw DB_SYNCHRONIZE=false i uruchamiaj migracje (#66).
+      synchronize: (process.env.DB_SYNCHRONIZE ?? 'true') !== 'false',
     }),
     // Rate limiting — domyślny (prywatny) limit dla endpointów uwierzytelnionych.
     // Publiczne endpointy (auth) mają ostrzejszy limit przez @Throttle w kontrolerze.

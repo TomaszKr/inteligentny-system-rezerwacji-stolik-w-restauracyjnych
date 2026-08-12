@@ -4,7 +4,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 
-@WebSocketGateway({ cors: true })
+// CORS WS: w prod ustaw CORS_ORIGIN (lista origenów po przecinku); domyślnie
+// permisywnie, ale połączenie i tak wymaga ważnego JWT + roli manager/admin (#67)
+@WebSocketGateway({
+  cors: {
+    origin: process.env.CORS_ORIGIN
+      ? process.env.CORS_ORIGIN.split(',').map((o) => o.trim())
+      : true,
+    credentials: true,
+  },
+})
 @Injectable()
 export class ReservationGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()

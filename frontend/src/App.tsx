@@ -1,5 +1,6 @@
 import TableMap from './components/table-map/TableMap';
 import ReservationsAdminPanelDemo from './components/admin/ReservationsAdminPanelDemo';
+import AvailabilitySearch from './components/availability/AvailabilitySearch';
 
 // Example of how to use the TableMap component
 const App = () => {
@@ -34,7 +35,9 @@ const App = () => {
   return (
     <div>
       <h1>Restaurant Reservation System</h1>
-      <TableMap 
+      {/* #13 — klient sprawdza dostępne stoliki w wybranym terminie */}
+      <AvailabilitySearch />
+      <TableMap
         tables={tables} 
         onTableSelect={handleTableSelect}
       />

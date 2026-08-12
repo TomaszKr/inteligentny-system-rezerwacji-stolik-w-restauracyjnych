@@ -12,6 +12,10 @@ export class Table {
   @Column({ type: 'integer' })
   capacity: number;
 
+  // Ręczny status stolika ustawiany przez menedżera (#18): 'wolny' | 'zajęty'
+  @Column({ type: 'varchar', length: 20, default: 'wolny' })
+  status: string;
+
   @ManyToOne(() => Restaurant, restaurant => restaurant.tables)
   @JoinColumn({ name: 'restaurantId' })
   restaurant: Restaurant;

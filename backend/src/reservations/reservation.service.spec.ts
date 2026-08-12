@@ -119,6 +119,13 @@ describe('ReservationService', () => {
     expect(mockRepo.create).toHaveBeenCalledWith(
       expect.objectContaining({ table: { id: 5 } }),
     );
+    // #59: powiadomienie wysłane PO commicie
+    expect(mockGateway.handleNewReservation).toHaveBeenCalled();
+    expect(
+      mockGateway.handleNewReservation.mock.invocationCallOrder[0],
+    ).toBeGreaterThan(
+      mockQueryRunner.commitTransaction.mock.invocationCallOrder[0],
+    );
   });
 
   it('(a2) po udanej rezerwacji wysyła potwierdzenie e-mail do klienta (#14)', async () => {
@@ -155,6 +162,8 @@ describe('ReservationService', () => {
     await expect(service.create(input)).rejects.toThrow(ConflictException);
     expect(mockQueryRunner.manager.save).not.toHaveBeenCalled();
     expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+    // #59: przy rollbacku nie wolno wysłać powiadomienia
+    expect(mockGateway.handleNewReservation).not.toHaveBeenCalled();
   });
 
   it('(c) różne stoliki w tym samym czasie są dozwolone', async () => {

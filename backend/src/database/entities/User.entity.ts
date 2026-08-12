@@ -1,6 +1,8 @@
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity()
+// Jawna nazwa tabeli — zgodna z migracjami (#92). Bez tego synchronize tworzyłby
+// 'user' (l.poj.), a migracje 'users' (l.mn.) → rozjazd schematu przy DB_SYNCHRONIZE=false.
+@Entity('users')
 export class User {
   @PrimaryGeneratedColumn()
   id: number;

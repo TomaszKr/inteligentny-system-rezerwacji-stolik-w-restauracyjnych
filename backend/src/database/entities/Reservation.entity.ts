@@ -2,7 +2,8 @@ import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 't
 import { User } from './User.entity';
 import { Table } from './Table.entity';
 
-@Entity()
+// Jawna nazwa tabeli — zgodna z migracjami (#92).
+@Entity('reservations')
 export class Reservation {
   @PrimaryGeneratedColumn()
   id: number;

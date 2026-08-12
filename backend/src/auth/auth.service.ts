@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, Logger } from '@nestjs/common';
+import { Injectable, ConflictException, Logger, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
@@ -15,11 +15,27 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
-    if (user && await bcrypt.compare(password, user.password)) {
+
+    // Blokada konta po nieudanych próbach (#81) — odrzuć nawet przy poprawnym haśle
+    if (user && user.lockedUntil && user.lockedUntil > new Date()) {
+      this.logger.warn(`Logowanie zablokowanego konta: ${email}`);
+      throw new UnauthorizedException(
+        'Konto tymczasowo zablokowane po zbyt wielu nieudanych próbach logowania',
+      );
+    }
+
+    if (user && (await bcrypt.compare(password, user.password))) {
+      if (user.failedLoginAttempts > 0) {
+        await this.usersService.resetFailedLogins(user.id);
+      }
       // Audyt zdarzeń bezpieczeństwa (OWASP A09) — bez sekretów
       this.logger.log(`Udane logowanie: ${email}`);
       const { password: _pw, ...result } = user;
       return result;
+    }
+
+    if (user) {
+      await this.usersService.recordFailedLogin(user);
     }
     this.logger.warn(`Nieudane logowanie: ${email}`);
     return null;

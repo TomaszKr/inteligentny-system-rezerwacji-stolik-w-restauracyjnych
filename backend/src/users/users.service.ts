@@ -36,6 +36,30 @@ export class UsersService {
     }
   }
 
+  /**
+   * Rejestruje nieudaną próbę logowania (#81). Po przekroczeniu limitu blokuje
+   * konto na skonfigurowany czas.
+   */
+  async recordFailedLogin(user: User): Promise<void> {
+    const attempts = (user.failedLoginAttempts ?? 0) + 1;
+    const max = parseInt(process.env.LOGIN_MAX_ATTEMPTS, 10) || 5;
+    const lockMinutes = parseInt(process.env.LOGIN_LOCK_MINUTES, 10) || 15;
+    const lockedUntil =
+      attempts >= max ? new Date(Date.now() + lockMinutes * 60000) : null;
+    await this.usersRepository.update(user.id, {
+      failedLoginAttempts: attempts,
+      lockedUntil,
+    });
+  }
+
+  /** Zeruje licznik nieudanych logowań i odblokowuje konto (#81). */
+  async resetFailedLogins(id: number): Promise<void> {
+    await this.usersRepository.update(id, {
+      failedLoginAttempts: 0,
+      lockedUntil: null,
+    });
+  }
+
   /** Lista użytkowników bez pola password (dla panelu admina). */
   async findAll(): Promise<SafeUser[]> {
     const users = await this.usersRepository.find();

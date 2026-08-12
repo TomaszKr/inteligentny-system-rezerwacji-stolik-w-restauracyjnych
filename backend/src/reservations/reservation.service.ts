@@ -115,7 +115,7 @@ export class ReservationService {
   async update(id: number, updateData: Partial<Reservation>): Promise<Reservation> {
     const reservation = await this.findOne(id);
     if (!reservation) {
-      throw new Error('Reservation not found');
+      throw new NotFoundException('Reservation not found');
     }
     Object.assign(reservation, updateData);
     return this.reservationRepository.save(reservation);

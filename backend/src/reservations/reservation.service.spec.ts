@@ -22,6 +22,8 @@ describe('ReservationService', () => {
   const mockRepo = {
     create: jest.fn((x) => x),
     findOne: jest.fn().mockResolvedValue({ id: 1 }),
+    findOneBy: jest.fn(),
+    save: jest.fn((x) => Promise.resolve(x)),
   };
 
   const mockDataSource = {
@@ -181,5 +183,27 @@ describe('ReservationService', () => {
     expect(mockQueryRunner.manager.createQueryBuilder).not.toHaveBeenCalled();
     expect(mockQueryRunner.manager.save).not.toHaveBeenCalled();
     expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
+  });
+
+  describe('update', () => {
+    it('rzuca NotFoundException gdy rezerwacja nie istnieje (404, nie 500)', async () => {
+      mockRepo.findOneBy.mockResolvedValueOnce(null);
+
+      await expect(
+        service.update(999, { status: 'Anulowana' }),
+      ).rejects.toThrow(NotFoundException);
+      expect(mockRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('aktualizuje istniejącą rezerwację', async () => {
+      mockRepo.findOneBy.mockResolvedValueOnce({ id: 1, status: 'W toku' });
+
+      const result = await service.update(1, { status: 'Zrealizowana' });
+
+      expect(mockRepo.save).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 1, status: 'Zrealizowana' }),
+      );
+      expect(result).toEqual(expect.objectContaining({ status: 'Zrealizowana' }));
+    });
   });
 });

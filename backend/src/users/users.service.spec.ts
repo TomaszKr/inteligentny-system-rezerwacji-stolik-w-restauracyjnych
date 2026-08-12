@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { User } from '../database/entities/User.entity';
 import { UserRole } from './enums/user-role.enum';
@@ -13,6 +13,7 @@ describe('UsersService', () => {
     findOneBy: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
+    count: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -67,6 +68,35 @@ describe('UsersService', () => {
       );
       expect(result).not.toHaveProperty('password');
       expect(result.role).toBe(UserRole.MANAGER);
+    });
+
+    it('blokuje degradację własnego konta admina (#65)', async () => {
+      mockRepo.findOneBy.mockResolvedValue({ id: 1, role: UserRole.ADMIN, password: 'h' });
+
+      await expect(
+        service.updateRole(1, UserRole.USER, 1),
+      ).rejects.toThrow(ForbiddenException);
+      expect(mockRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('blokuje degradację ostatniego admina (#65)', async () => {
+      mockRepo.findOneBy.mockResolvedValue({ id: 2, role: UserRole.ADMIN, password: 'h' });
+      mockRepo.count.mockResolvedValue(1);
+
+      await expect(
+        service.updateRole(2, UserRole.USER, 99),
+      ).rejects.toThrow(ConflictException);
+      expect(mockRepo.save).not.toHaveBeenCalled();
+    });
+
+    it('pozwala zdegradować admina gdy jest inny admin', async () => {
+      mockRepo.findOneBy.mockResolvedValue({ id: 2, role: UserRole.ADMIN, password: 'h' });
+      mockRepo.count.mockResolvedValue(2);
+      mockRepo.save.mockImplementation((u) => Promise.resolve(u));
+
+      const result = await service.updateRole(2, UserRole.USER, 99);
+
+      expect(result.role).toBe(UserRole.USER);
     });
   });
 });

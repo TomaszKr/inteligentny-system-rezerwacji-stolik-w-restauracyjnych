@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../database/entities/User.entity';
@@ -33,11 +33,34 @@ export class UsersService {
   }
 
   /** Zmiana roli użytkownika (admin nadaje role pracownikom). */
-  async updateRole(id: number, role: UserRole): Promise<SafeUser> {
+  async updateRole(
+    id: number,
+    role: UserRole,
+    actingUserId?: number,
+  ): Promise<SafeUser> {
     const user = await this.usersRepository.findOneBy({ id });
     if (!user) {
       throw new NotFoundException('User not found');
     }
+
+    const demotingFromAdmin =
+      user.role === UserRole.ADMIN && role !== UserRole.ADMIN;
+
+    // Admin nie może zdegradować własnego konta (#65) — ochrona przed lockoutem
+    if (actingUserId != null && id === actingUserId && demotingFromAdmin) {
+      throw new ForbiddenException('Nie możesz odebrać własnego uprawnienia administratora');
+    }
+
+    // Nie można pozostawić systemu bez żadnego administratora (#65)
+    if (demotingFromAdmin) {
+      const adminCount = await this.usersRepository.count({
+        where: { role: UserRole.ADMIN },
+      });
+      if (adminCount <= 1) {
+        throw new ConflictException('W systemie musi pozostać co najmniej jeden administrator');
+      }
+    }
+
     user.role = role;
     const saved = await this.usersRepository.save(user);
     const { password: _pw, ...rest } = saved;

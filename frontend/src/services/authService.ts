@@ -69,6 +69,20 @@ export const login = async (
   localStorage.setItem(TOKEN_KEY, data.access_token);
 };
 
+/** Weryfikuje adres e-mail tokenem z linku. Zwraca true przy sukcesie. */
+export const verifyEmail = async (token: string): Promise<void> => {
+  const response = await fetch(
+    `${API_BASE_URL}/auth/verify-email?token=${encodeURIComponent(token)}`,
+  );
+  if (!response.ok) {
+    throw new Error(
+      response.status === 400
+        ? 'Link weryfikacyjny jest nieprawidłowy lub został już użyty.'
+        : `Weryfikacja nie powiodła się (HTTP ${response.status}).`,
+    );
+  }
+};
+
 export const register = async (payload: RegisterPayload): Promise<void> => {
   const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: 'POST',

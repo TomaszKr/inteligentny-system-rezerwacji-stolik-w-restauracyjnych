@@ -284,3 +284,23 @@ main { display: block; padding-bottom: calc(var(--bottomnav-h) + env(safe-area-i
   .user-actions { grid-column: 1 / -1; justify-items: stretch; }
   .user-actions .select-sm { width: 100%; }
 }
+
+/* ── Strona weryfikacji e-mail (#verify-email-ux) ───────────── */
+.verify-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 40px 0;
+  background:
+    radial-gradient(120% 80% at 50% -10%, var(--bg-tint) 0%, var(--bg) 60%);
+}
+.verify-ic {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+}
+.verify-ic-neutral { background: var(--gold-soft); color: var(--gold-strong); }
+.verify-ic-ok      { background: var(--success-soft); color: var(--success); }
+.verify-ic-err     { background: var(--danger-soft); color: var(--danger); }

@@ -5,26 +5,29 @@ import { fetchReservations, updateReservationStatus } from '../../services/reser
 import { getToken } from '../../services/authService';
 import { useToast } from '../ui/Toast';
 import TablesManager from './TablesManager';
+import UsersManager from './UsersManager';
 import {
   IcCalendar, IcClock, IcUsers, IcUser, IcTable, IcBell, IcLayout,
-  IcCheck, IcX, IcSparkle,
+  IcCheck, IcSparkle,
 } from '../ui/icons';
 
-type Tab = 'reservations' | 'calendar' | 'tables' | 'live';
+type Tab = 'reservations' | 'calendar' | 'tables' | 'users' | 'live';
 
 const todayIso = () => new Date().toISOString().slice(0, 10);
 const timeOf = (t: Date | string) => new Date(t).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
 const dateOf = (t: Date | string) => new Date(t).toLocaleDateString('pl-PL', { day: 'numeric', month: 'short' });
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
-  confirmed:  { label: 'Potwierdzona', cls: 'badge-success' },
-  Potwierdzona: { label: 'Potwierdzona', cls: 'badge-success' },
-  pending:    { label: 'Oczekuje', cls: 'badge-warn' },
-  cancelled:  { label: 'Anulowana', cls: 'badge-danger' },
-  Anulowana:  { label: 'Anulowana', cls: 'badge-danger' },
-  completed:  { label: 'Zrealizowana', cls: 'badge-info' },
+  confirmed:      { label: 'Potwierdzona', cls: 'badge-success' },
+  Potwierdzona:   { label: 'Potwierdzona', cls: 'badge-success' },
+  'W toku':       { label: 'W toku', cls: 'badge-info' },
+  Zrealizowana:   { label: 'Zrealizowana', cls: 'badge-gold' },
+  Anulowana:      { label: 'Anulowana', cls: 'badge-danger' },
 };
 const statusBadge = (s?: string) => STATUS_META[s || 'confirmed'] || { label: s || '—', cls: 'badge' };
+
+// Statusy ustawialne przez admina (enum backendu ReservationStatus)
+const SETTABLE_STATUSES = ['W toku', 'Zrealizowana', 'Anulowana'] as const;
 
 const StatCard: React.FC<{ icon: React.ReactNode; value: React.ReactNode; label: string }> = ({ icon, value, label }) => (
   <div className="stat-card">
@@ -136,6 +139,7 @@ const AdminDashboard: React.FC = () => {
         <button role="tab" aria-selected={tab === 'reservations'} className={`tab ${tab === 'reservations' ? 'is-active' : ''}`} onClick={() => setTab('reservations')}><IcTable size={16} /> Rezerwacje</button>
         <button role="tab" aria-selected={tab === 'calendar'} className={`tab ${tab === 'calendar' ? 'is-active' : ''}`} onClick={() => setTab('calendar')}><IcCalendar size={16} /> Kalendarz</button>
         <button role="tab" aria-selected={tab === 'tables'} className={`tab ${tab === 'tables' ? 'is-active' : ''}`} onClick={() => setTab('tables')}><IcLayout size={16} /> Stoliki</button>
+        <button role="tab" aria-selected={tab === 'users'} className={`tab ${tab === 'users' ? 'is-active' : ''}`} onClick={() => setTab('users')}><IcUsers size={16} /> Użytkownicy</button>
         <button role="tab" aria-selected={tab === 'live'} className={`tab ${tab === 'live' ? 'is-active' : ''}`} onClick={() => setTab('live')}><IcBell size={16} /> Na żywo{live.length > 0 && <span className="tab-count">{live.length}</span>}</button>
       </div>
 
@@ -160,7 +164,6 @@ const AdminDashboard: React.FC = () => {
             <div className="stack" style={{ gap: 10 }}>
               {filtered.map((r) => {
                 const b = statusBadge(r.status);
-                const cancelled = /cancel|anulow/i.test(r.status || '');
                 return (
                   <div key={r.id} className="res-row">
                     <div className="res-time"><span className="res-time-h">{timeOf(r.reservationTime)}</span><span className="res-time-d">{dateOf(r.reservationTime)}</span></div>
@@ -170,9 +173,16 @@ const AdminDashboard: React.FC = () => {
                     </div>
                     <div className="res-actions">
                       <span className={`badge ${b.cls}`}>{b.label}</span>
-                      {!cancelled && (
-                        <button className="btn btn-sm btn-danger" onClick={() => setStatus(r.id, 'Anulowana')} title="Anuluj"><IcX size={15} /></button>
-                      )}
+                      <select
+                        className="select select-sm"
+                        value={SETTABLE_STATUSES.includes(r.status as any) ? (r.status as string) : ''}
+                        onChange={(e) => e.target.value && setStatus(r.id, e.target.value)}
+                        title="Zmień status rezerwacji"
+                        aria-label={`Zmień status rezerwacji #${r.id}`}
+                      >
+                        <option value="" disabled>Zmień status…</option>
+                        {SETTABLE_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
+                      </select>
                     </div>
                   </div>
                 );
@@ -215,6 +225,9 @@ const AdminDashboard: React.FC = () => {
 
       {/* Stoliki */}
       {tab === 'tables' && <TablesManager />}
+
+      {/* Użytkownicy */}
+      {tab === 'users' && <UsersManager />}
 
       {/* Na żywo */}
       {tab === 'live' && (

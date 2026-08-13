@@ -34,6 +34,15 @@ export const listRestaurants = async (): Promise<AdminRestaurant[]> => {
   return handle(res, 'Nie udało się pobrać restauracji');
 };
 
+export const createRestaurant = async (payload: { name: string; address: string; phone: string; email: string }): Promise<AdminRestaurant> => {
+  const res = await fetch(`${API_BASE_URL}/admin/restaurants`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify(payload),
+  });
+  return handle(res, 'Nie udało się utworzyć restauracji');
+};
+
 export const listTables = async (restaurantId?: number): Promise<AdminTable[]> => {
   const q = restaurantId ? `?restaurantId=${restaurantId}` : '';
   const res = await fetch(`${API_BASE_URL}/admin/tables${q}`, { headers: { ...authHeaders() } });

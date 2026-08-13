@@ -13,10 +13,15 @@ import * as path from 'path';
         host: process.env.MAIL_HOST || 'smtp.mailtrap.io',
         port: parseInt(process.env.MAIL_PORT, 10) || 2525,
         secure: false,
-        auth: {
-          user: process.env.MAIL_USER,
-          pass: process.env.MAIL_PASSWORD,
-        },
+        // Auth tylko gdy podano poświadczenia. Bez tego nodemailer próbuje
+        // PLAIN z pustymi danymi → EAUTH. Serwery bez auth (np. mailpit) wtedy
+        // działają. (#mail-local-dev)
+        auth: process.env.MAIL_USER
+          ? {
+              user: process.env.MAIL_USER,
+              pass: process.env.MAIL_PASSWORD,
+            }
+          : undefined,
       },
       defaults: {
         from: process.env.MAIL_FROM || 'noreply@restaurant-app.com',

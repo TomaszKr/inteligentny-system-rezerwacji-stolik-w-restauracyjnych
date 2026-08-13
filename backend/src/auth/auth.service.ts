@@ -158,7 +158,7 @@ export class AuthService {
     this.mailService
       .sendVerificationEmail(email, `${firstName} ${lastName}`, verificationToken)
       .catch((err) => this.logger.error('Nie udało się wysłać e-maila weryfikacyjnego', err));
-    this.logger.log(`Link weryfikacyjny (${email}): /api/auth/verify-email?token=${verificationToken}`);
+    this.logger.log(`Link weryfikacyjny (${email}): /verify-email?token=${verificationToken}`);
 
     // Nie zwracaj wrażliwych pól (hasło, sekret 2FA, token) — spójnie przez toSafeUser
     const safe = toSafeUser(user);

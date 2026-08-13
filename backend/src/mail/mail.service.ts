@@ -76,7 +76,9 @@ export class MailService {
     token: string,
   ): Promise<void> {
     const baseUrl = process.env.APP_URL || 'http://localhost';
-    const verificationUrl = `${baseUrl}/api/auth/verify-email?token=${token}`;
+    // Link prowadzi na stronę frontu (SPA), która sama woła API i pokazuje wynik
+    // w UI — nie prosto w endpoint API (surowy JSON). (#verify-email-ux)
+    const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
     const mailOptions = {
       to,
       subject: 'Potwierdź adres e-mail',

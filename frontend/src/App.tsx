@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from './context/AuthContext';
 import { useToast } from './components/ui/Toast';
 import AuthModal from './components/auth/AuthModal';
+import VerifyEmailPage from './components/auth/VerifyEmailPage';
 import BookingWizard from './components/booking/BookingWizard';
 import AdminDashboard from './components/admin/AdminDashboard';
 import {
@@ -38,6 +39,13 @@ const App: React.FC = () => {
   const { isDark, toggle } = useTheme();
   const [view, setView] = useState<View>('home');
   const [authOpen, setAuthOpen] = useState(false);
+
+  // Dedykowana strona weryfikacji e-mail — link z maila prowadzi na /verify-email
+  // (SPA bez routera: rozgałęziamy po ścieżce). Return po hookach, by zachować
+  // stałą kolejność hooków (Rules of Hooks). (#verify-email-ux)
+  if (window.location.pathname === '/verify-email') {
+    return <VerifyEmailPage />;
+  }
 
   const go = (v: View) => {
     if ((v === 'admin' && !isAdmin) || (v === 'account' && !authed)) { setAuthOpen(true); return; }

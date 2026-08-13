@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   AdminTable, AdminRestaurant, listTables, listRestaurants,
-  createTable, updateTable, updateTableStatus, deleteTable,
+  createTable, updateTable, updateTableStatus, deleteTable, createRestaurant,
 } from '../../services/tablesAdminService';
 import { useToast } from '../ui/Toast';
-import { IcTable, IcUsers, IcCheck, IcX, IcSparkle } from '../ui/icons';
+import { IcTable, IcUsers, IcCheck, IcX, IcSparkle, IcMapPin, IcPhone, IcMail } from '../ui/icons';
 
 const isFree = (s?: string) => (s || 'wolny') === 'wolny';
 
@@ -26,6 +26,11 @@ const TablesManager: React.FC = () => {
   const [editId, setEditId] = useState<number | null>(null);
   const [editNo, setEditNo] = useState(0);
   const [editCap, setEditCap] = useState(0);
+
+  // tworzenie restauracji
+  const [showNewRest, setShowNewRest] = useState(false);
+  const [newRest, setNewRest] = useState({ name: '', address: '', phone: '', email: '' });
+  const [creatingRest, setCreatingRest] = useState(false);
 
   const loadRestaurants = async () => {
     try {
@@ -93,6 +98,26 @@ const TablesManager: React.FC = () => {
     }
   };
 
+  const addRestaurant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreatingRest(true);
+    try {
+      const r = await createRestaurant(newRest);
+      toast.push(`Utworzono restaurację „${newRest.name}".`, 'success');
+      setNewRest({ name: '', address: '', phone: '', email: '' });
+      setShowNewRest(false);
+      await loadRestaurants();
+      if (r?.id) setRestaurantId(r.id);
+    } catch (e) {
+      toast.push(e instanceof Error ? e.message : 'Nie udało się utworzyć restauracji.', 'error');
+    } finally {
+      setCreatingRest(false);
+    }
+  };
+
+  const setRest = (k: keyof typeof newRest) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setNewRest((r) => ({ ...r, [k]: e.target.value }));
+
   const startEdit = (t: AdminTable) => { setEditId(t.id); setEditNo(t.tableNumber); setEditCap(t.capacity); };
   const saveEdit = async (id: number) => {
     setBusyId(id);
@@ -124,15 +149,45 @@ const TablesManager: React.FC = () => {
 
   return (
     <div className="stack" style={{ gap: 16 }}>
-      {restaurants.length > 1 && (
-        <div className="field" style={{ maxWidth: 320 }}>
-          <label className="label">Restauracja</label>
-          <select className="select" value={restaurantId ?? ''} onChange={(e) => setRestaurantId(Number(e.target.value))}>
-            {restaurants.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-          </select>
+      {/* Restauracje */}
+      <div className="rest-bar">
+        <div className="row between wrap" style={{ gap: 12 }}>
+          {restaurants.length > 0 ? (
+            <div className="field" style={{ maxWidth: 340, flex: 1, minWidth: 200 }}>
+              <label className="label"><IcMapPin size={14} /> Restauracja</label>
+              <select className="select" value={restaurantId ?? ''} onChange={(e) => setRestaurantId(Number(e.target.value))}>
+                {restaurants.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+            </div>
+          ) : (
+            <p className="muted" style={{ margin: 0 }}>Nie masz jeszcze żadnej restauracji. Utwórz pierwszą, aby dodawać stoliki.</p>
+          )}
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setShowNewRest((v) => !v)}>
+            {showNewRest ? 'Anuluj' : '+ Nowa restauracja'}
+          </button>
         </div>
-      )}
 
+        {(showNewRest || restaurants.length === 0) && (
+          <form className="rest-form animate-in" onSubmit={addRestaurant}>
+            <div className="field"><label className="label">Nazwa</label>
+              <div className="input-group"><IcSparkle className="input-icon" size={18} /><input className="input" value={newRest.name} onChange={setRest('name')} required placeholder="AURA Restaurant" /></div>
+            </div>
+            <div className="field"><label className="label">Adres</label>
+              <div className="input-group"><IcMapPin className="input-icon" size={18} /><input className="input" value={newRest.address} onChange={setRest('address')} required placeholder="ul. Złota 1, Centrum" /></div>
+            </div>
+            <div className="field"><label className="label">Telefon</label>
+              <div className="input-group"><IcPhone className="input-icon" size={18} /><input className="input" type="tel" value={newRest.phone} onChange={setRest('phone')} required placeholder="+48 22 123 45 67" /></div>
+            </div>
+            <div className="field"><label className="label">E-mail</label>
+              <div className="input-group"><IcMail className="input-icon" size={18} /><input className="input" type="email" value={newRest.email} onChange={setRest('email')} required placeholder="kontakt@aura.pl" /></div>
+            </div>
+            <button className="btn btn-primary" type="submit" disabled={creatingRest}>{creatingRest ? 'Tworzę…' : 'Utwórz restaurację'}</button>
+          </form>
+        )}
+      </div>
+
+      {restaurantId == null ? null : (
+      <>
       <div className="stat-grid">
         <div className="stat-card"><span className="stat-ic"><IcTable size={20} /></span><div><div className="stat-value">{stats.count}</div><div className="stat-label">Stolików</div></div></div>
         <div className="stat-card"><span className="stat-ic"><IcUsers size={20} /></span><div><div className="stat-value">{stats.seats}</div><div className="stat-label">Miejsc łącznie</div></div></div>
@@ -198,6 +253,8 @@ const TablesManager: React.FC = () => {
             </div>
           ))}
         </div>
+      )}
+      </>
       )}
     </div>
   );

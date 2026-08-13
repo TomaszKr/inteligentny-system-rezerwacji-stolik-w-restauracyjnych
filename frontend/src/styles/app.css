@@ -260,3 +260,27 @@ main { display: block; padding-bottom: calc(var(--bottomnav-h) + env(safe-area-i
 .live-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-sm); }
 .live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--success); flex-shrink: 0; box-shadow: 0 0 0 4px var(--success-soft); animation: pulse 1.8s infinite; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* Mały select (akcje w wierszach) */
+.select-sm { padding: 8px 12px; font-size: 13px; border-radius: var(--r-pill); width: auto; min-width: 130px; }
+
+/* Restauracje */
+.rest-bar { display: grid; gap: 14px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-sm); }
+.rest-form { display: grid; gap: 12px; grid-template-columns: 1fr; padding-top: 4px; border-top: 1px solid var(--line); }
+.rest-form .btn { justify-self: start; }
+@media (min-width: 620px) { .rest-form { grid-template-columns: 1fr 1fr; } .rest-form .btn { grid-column: 1 / -1; } }
+
+/* Użytkownicy */
+.user-row { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow-sm); transition: border-color 0.2s; }
+.user-row:hover { border-color: var(--gold-soft); }
+.user-avatar { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--gold-grad); color: #23180a; font-family: var(--font-display); font-weight: 700; font-size: 19px; flex-shrink: 0; }
+.user-main { min-width: 0; }
+.user-name { font-weight: 700; font-size: 15.5px; display: flex; align-items: center; flex-wrap: wrap; }
+.user-mail { font-size: 13px; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
+.user-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.user-actions { display: grid; gap: 4px; justify-items: end; }
+@media (max-width: 560px) {
+  .user-row { grid-template-columns: auto 1fr; }
+  .user-actions { grid-column: 1 / -1; justify-items: stretch; }
+  .user-actions .select-sm { width: 100%; }
+}
